@@ -9,4 +9,20 @@ export const auth = defineAuth({
     email: true,
   },
   groups: ['ADMIN', 'GENERAL'],
+  userAttributes: {
+    email: {
+      mutable: true,
+    },
+    profilePicture: {
+      mutable: true,
+    },
+    'custom:userProfile': {
+      dataType: 'String',
+      mutable: true,
+    },
+    'custom:groups': {
+      dataType: 'String',
+      mutable: true,
+    },
+  },
 });

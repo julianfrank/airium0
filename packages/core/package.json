@@ -13,6 +13,8 @@
     "deploy": "amplify deploy",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:auth": "jest --testPathPattern=auth",
+    "test:auth:watch": "jest --testPathPattern=auth --watch",
     "lint": "echo 'Linting disabled - TypeScript compilation provides type checking'",
     "clean": "rm -rf dist .amplify/artifacts amplify_outputs.json"
   },
@@ -26,10 +28,18 @@
     "@aws-sdk/client-apigatewaymanagementapi": "^3.0.0",
     "@aws-sdk/client-bedrock-runtime": "^3.0.0",
     "@aws-sdk/client-appsync": "^3.0.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.0.0",
     "@airium/shared": "*"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.0",
+    "@types/jest": "^29.0.0",
+    "@babel/core": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-typescript": "^7.0.0",
+    "babel-jest": "^29.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
     "vitest": "^1.0.0",
     "typescript": "^5.0.0"
   }

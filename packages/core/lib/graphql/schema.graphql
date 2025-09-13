@@ -19,6 +19,22 @@ type ChatEvent {
   timestamp: AWSDateTime!
 }
 
+type UIControlEvent {
+  userId: String!
+  action: String!
+  target: String!
+  content: AWSJSON
+  timestamp: AWSDateTime!
+}
+
+type NotesEvent {
+  userId: String!
+  noteId: String!
+  action: String!
+  content: AWSJSON
+  timestamp: AWSDateTime!
+}
+
 type Mutation {
   publishEvent(
     type: String!
@@ -36,6 +52,20 @@ type Mutation {
     userId: String!
     message: AWSJSON!
   ): ChatEvent
+  
+  publishUIControlEvent(
+    userId: String!
+    action: String!
+    target: String!
+    content: AWSJSON
+  ): UIControlEvent
+  
+  publishNotesEvent(
+    userId: String!
+    noteId: String!
+    action: String!
+    content: AWSJSON
+  ): NotesEvent
 }
 
 type Subscription {
@@ -47,4 +77,10 @@ type Subscription {
   
   onChatEvent(userId: String!): ChatEvent
     @aws_subscribe(mutations: ["publishChatEvent"])
+  
+  onUIControlEvent(userId: String!): UIControlEvent
+    @aws_subscribe(mutations: ["publishUIControlEvent"])
+  
+  onNotesEvent(userId: String!): NotesEvent
+    @aws_subscribe(mutations: ["publishNotesEvent"])
 }

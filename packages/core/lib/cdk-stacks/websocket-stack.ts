@@ -15,6 +15,7 @@ export interface WebSocketStackProps extends StackProps {
 export class WebSocketStack extends Stack {
   public readonly webSocketApi: apigatewayv2.WebSocketApi;
   public readonly connectionsTable: dynamodb.Table;
+  private webSocketHandler: lambda.Function;
 
   constructor(scope: Construct, id: string, props: WebSocketStackProps) {
     super(scope, id, props);
@@ -28,8 +29,15 @@ export class WebSocketStack extends Stack {
         RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
     });
 
+    // Add GSI for querying connections by userId
+    this.connectionsTable.addGlobalSecondaryIndex({
+      indexName: 'UserIdIndex',
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'status', type: dynamodb.AttributeType.STRING },
+    });
+
     // Lambda function for WebSocket handlers
-    const webSocketHandler = new lambda.Function(this, 'WebSocketHandler', {
+    this.webSocketHandler = new lambda.Function(this, 'WebSocketHandler', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('lib/lambda-functions/websocket-handler'),
@@ -41,20 +49,20 @@ export class WebSocketStack extends Stack {
     });
 
     // Grant permissions to Lambda
-    this.connectionsTable.grantReadWriteData(webSocketHandler);
+    this.connectionsTable.grantReadWriteData(this.webSocketHandler);
 
     // WebSocket API
     this.webSocketApi = new apigatewayv2.WebSocketApi(this, 'WebSocketApi', {
       apiName: 'airium-websocket-api',
       description: 'WebSocket API for real-time communication',
       connectRouteOptions: {
-        integration: new WebSocketLambdaIntegration('ConnectIntegration', webSocketHandler),
+        integration: new WebSocketLambdaIntegration('ConnectIntegration', this.webSocketHandler),
       },
       disconnectRouteOptions: {
-        integration: new WebSocketLambdaIntegration('DisconnectIntegration', webSocketHandler),
+        integration: new WebSocketLambdaIntegration('DisconnectIntegration', this.webSocketHandler),
       },
       defaultRouteOptions: {
-        integration: new WebSocketLambdaIntegration('DefaultIntegration', webSocketHandler),
+        integration: new WebSocketLambdaIntegration('DefaultIntegration', this.webSocketHandler),
       },
     });
 
@@ -66,7 +74,7 @@ export class WebSocketStack extends Stack {
     });
 
     // Grant WebSocket API permissions to Lambda
-    webSocketHandler.addToRolePolicy(
+    this.webSocketHandler.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['execute-api:ManageConnections'],
@@ -75,5 +83,13 @@ export class WebSocketStack extends Stack {
         ],
       })
     );
+  }
+
+  public addEventPublisherFunction(eventPublisherFunction: lambda.Function): void {
+    // Add environment variable for event publisher function name
+    this.webSocketHandler.addEnvironment('EVENT_PUBLISHER_FUNCTION_NAME', eventPublisherFunction.functionName);
+    
+    // Grant permission to invoke the event publisher function
+    eventPublisherFunction.grantInvoke(this.webSocketHandler);
   }
 }

@@ -16,33 +16,61 @@
 
 
 
+
+
   - Create Amplify Gen 2 project structure in Core module
   - Configure Amplify backend.ts with basic setup
   - Set up CDK integration for additional AWS services
   - _Requirements: 1.4, 8.3_
+-
 
-- [ ] 3. Implement authentication system using Amplify Gen 2
+- [x] 3. Implement authentication system using Amplify Gen 2
+
+
+
   - Configure defineAuth for Cognito User Pool and Identity Pool
   - Create user profile management (Admin/General roles)
   - Implement group management functionality
   - Write authentication Lambda functions
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 10.1, 10.2_
 
-- [ ] 4. Set up DynamoDB data layer using Amplify Gen 2
+- [x] 4. Set up DynamoDB data layer using Amplify Gen 2
+
+
+
+
+
+
+
+
+
   - Configure defineData for core data models
   - Create schemas for users, groups, applications, and chat data
   - Implement data access patterns with proper IAM permissions
   - Write unit tests for data layer operations
   - _Requirements: 7.1, 7.2, 7.4, 10.3_
 
-- [ ] 5. Create WebSocket infrastructure for real-time communication
+- [x] 5. Create WebSocket infrastructure for real-time communication
+
+
+
+
+
+
   - Implement WebSocket API Gateway using CDK
   - Create WebSocket Lambda handlers (connect, disconnect, message)
   - Set up connection management in DynamoDB
   - Write connection lifecycle management code
   - _Requirements: 1.1, 6.2_
 
-- [ ] 6. Implement AppSync Events integration
+- [x] 6. Implement AppSync Events integration
+
+
+
+
+
+
+
   - Create AppSync Events CDK stack
   - Configure GraphQL schema for real-time subscriptions
   - Implement event publishing Lambda functions
