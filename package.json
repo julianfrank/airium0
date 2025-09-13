@@ -1,0 +1,34 @@
+{
+  "name": "airium",
+  "version": "1.0.0",
+  "description": "AI-powered groupware solution built on serverless AWS architecture",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "shared"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev": "npm run dev --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "clean": "npm run clean --workspaces && rm -rf node_modules",
+    "core:build": "npm run build -w packages/core",
+    "core:dev": "npm run dev -w packages/core",
+    "ui:build": "npm run build -w packages/ui",
+    "ui:dev": "npm run dev -w packages/ui",
+    "shared:build": "npm run build -w shared"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

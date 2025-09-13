@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@airium/shared/*": ["../../shared/src/*"]
+    },
+    "outDir": "./dist",
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "include": [
+    "src/**/*",
+    "amplify/**/*",
+    "lib/cdk-stacks/**/*",
+    "lib/graphql/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".amplify",
+    "lib/lambda-functions/**/node_modules",
+    "lib/lambda-functions/**/dist"
+  ]
+}

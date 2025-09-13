@@ -1,0 +1,36 @@
+{
+  "name": "@airium/core",
+  "version": "1.0.0",
+  "description": "Core backend module using Amplify Gen 2",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:amplify": "ampx generate outputs --app-id local",
+    "build:lambdas": "node scripts/build-lambdas.js",
+    "dev": "tsc --watch",
+    "deploy": "amplify deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "echo 'Linting disabled - TypeScript compilation provides type checking'",
+    "clean": "rm -rf dist .amplify/artifacts amplify_outputs.json"
+  },
+  "dependencies": {
+    "@aws-amplify/backend": "^1.0.0",
+    "@aws-amplify/backend-cli": "^1.0.0",
+    "aws-cdk-lib": "^2.100.0",
+    "constructs": "^10.0.0",
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.0.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.0.0",
+    "@aws-sdk/client-appsync": "^3.0.0",
+    "@airium/shared": "*"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "vitest": "^1.0.0",
+    "typescript": "^5.0.0"
+  }
+}

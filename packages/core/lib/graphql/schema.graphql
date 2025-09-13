@@ -1,0 +1,50 @@
+type Event {
+  id: ID!
+  type: String!
+  payload: AWSJSON!
+  userId: String!
+  timestamp: AWSDateTime!
+}
+
+type VoiceSessionEvent {
+  sessionId: String!
+  status: String!
+  data: AWSJSON
+  timestamp: AWSDateTime!
+}
+
+type ChatEvent {
+  userId: String!
+  message: AWSJSON!
+  timestamp: AWSDateTime!
+}
+
+type Mutation {
+  publishEvent(
+    type: String!
+    payload: AWSJSON!
+    userId: String!
+  ): Event
+  
+  publishVoiceSessionEvent(
+    sessionId: String!
+    status: String!
+    data: AWSJSON
+  ): VoiceSessionEvent
+  
+  publishChatEvent(
+    userId: String!
+    message: AWSJSON!
+  ): ChatEvent
+}
+
+type Subscription {
+  onEvent(userId: String!): Event
+    @aws_subscribe(mutations: ["publishEvent"])
+  
+  onVoiceSessionEvent(sessionId: String!): VoiceSessionEvent
+    @aws_subscribe(mutations: ["publishVoiceSessionEvent"])
+  
+  onChatEvent(userId: String!): ChatEvent
+    @aws_subscribe(mutations: ["publishChatEvent"])
+}

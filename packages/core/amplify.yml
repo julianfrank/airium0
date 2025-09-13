@@ -1,0 +1,19 @@
+version: 1
+backend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+        - cd lib/lambda-functions/websocket-handler && npm ci
+        - cd ../nova-sonic-processor && npm ci
+        - cd ../appsync-event-publisher && npm ci
+        - cd ../connection-manager && npm ci
+    build:
+      commands:
+        - npx ampx generate outputs --app-id local
+        - npm run build
+  artifacts:
+    baseDirectory: .
+    files:
+      - amplify_outputs.json
+      - '**/*'
