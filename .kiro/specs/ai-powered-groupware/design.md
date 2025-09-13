@@ -557,5 +557,5 @@ graph LR
 
 ### Infrastructure Security
 - VPC configuration for Lambda functions (if needed)
-- WAF rules for API Gateway
 - CloudTrail logging for audit trails
+- API Gateway throttling and rate limiting
