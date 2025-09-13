@@ -1,0 +1,67 @@
+Project Title : AIrium - AI powered Groupware
+Date: 13sept2025
+ 
+
+# Infrastructure Requirements:
+
+- The solution should be based on completely serverless Architecture with zero cost when not in use and no monthly costs.
+- For this the solution may use dynamically built using CDK on lines to the code in https://github.com/aws-samples/sample-serverless-nova-sonic-chat
+- The base solution should be built using Astro in SSG mode with Amplify Gen 2. Amplify Gen 2 should be used to create backend infrastructure and IAM permissions between the components
+- The Website should be hosted on Amplify Gen 2 in SSG (Server Site Generation) model.
+- The web page should be React 19 based and use amplify React UI as GUI framework with ShadCDN for components not supported by Amplify React UI.
+- Other Frameworks that could be used appropriately like  ReactFlow
+- The Page Design should be Responsive so that it can be used comfortably in desktops, tablets and mobile devices.
+- The entire solution should be based on AWS including Amplify Gen 2, S3, Lambda, IAM, DynamoDB, API Gateway, Appsync, Cognito Userpool and Identitypool, Bedrock Flows, Nova Lite, Nova pro and nova sonic
+- The solution should ultimately be available on the public url https://devposthackathon.tojf.link
+- All media data like images, videos and document files should be stored in S3 with completely isolated directories for each user.
+- All chat and memory data should be stored in dynamodb or s3 vector
+- Use a NPM monorepo to isolate the different modules but ensure the Amplify configuration is shared using import and export between workspaces
+ 
+
+# User Requirements
+
+## User Profiles
+1. Admin
+2. General
+
+## Admin User
+1. This user is the ultimate user with access to everything
+2. Should have access to user management with following functionality
+    2.1 adding, removing Cognito Users
+    2.2 Adding, Removing Cognito Groups
+    2.3 Adding, Removing Cognito Identitypools
+    2.4 Adding, Removing Cognito Users from Cognito Groups
+3. Should have access to Application Management with following functionality
+    3.1 Create and Edit REST Applications and edit their parameters like url, query parameters and remarks providing context of the application and each parameter
+    3.2 Create and Edit MCP Applications and edit their parameters like url, transport type, other MCP PArameters and remarks providing context of the application and each parameter
+    3.3 Create and Edit Inbuilt Applications which are basically prebuild urls which are part of the UI Module by code
+    3.4 Adding, Removing REST, MCP and Inbuilt Applications from Cognito Groups
+
+## General User
+1. All users should be merked as General users by default
+2. General Users can See the main UI by default
+3. Based on access provided the user will be able to see a list of applications they have access to
+4. Applications that the user does not have access to will not be shown to the user
+
+## Application Modules
+Each module is a separate NPM workspace 
+
+### Core Module
+1. This has the key backend applications and is managed using Amplify Gen2
+2. Amplify Gen2 Hosting will import the repository from the UI Workspace
+3. This workspace will use Amplify Gen2 to build the Cognito BAckend using defineAuth
+4. This workspace will use Amplify Gen2 to build the DynamoDB Backend using defineData
+5. Other Backends would use CDK to generate and then output their configuration into Amplify Gen2 amplify_outputs.json
+
+### UI Module
+1. This will build the UI Frontend for both Admin and General users
+2. The code will import the amplify_outputs.json from the Core Module to get access to all the backend configurations
+3. The UI will use Nova Sonic to provide Voice based Input and output
+4. The UI will use a simple Text box to take texual inputs
+5. The ui will also allow user to record voicenotes, videonotes and upload documents
+6. UI will have a ui control solution that allows the core module to control the display of the user like
+6.1 Showing and removing notes
+6.2 Showing and removing rich notes based on markdown with image and mermaid plugins
+6.3 Showing and removing images and video generated from approved applications
+
+

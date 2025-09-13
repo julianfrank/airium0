@@ -1,0 +1,54 @@
+Project Title : AIrium - AI powered Groupware
+Date: 12sept2025
+ 
+
+Infrastructure Requirements:
+
+- The solution should be based on completely serverless Architecture with zero cost when not in use and no monthly costs.
+- For this the solution may use dynamically built using CDK on lines to the code in https://github.com/aws-samples/sample-serverless-nova-sonic-chat
+- The base solution should be built using Astro in SSG mode with Amplify Gen 2. Amplify Gen 2 should be used to create backend infrastructure and IAM permissions between the components
+- The Website should be hosted on Amplify Gen 2 in SSG (Server Site Generation) model.
+- The web page should be React 19 based and use amplify React UI as GUI framework with ShadCDN for components not supported by Ampligy React UI.
+- The Page Design should be Responsive so that it can be used comfortably in desktops, tablets and mobile devices.
+- The entire solution should be based on AWS including Amplify Gen 2, S3, Lambda, IAM, DynamoDB, API Gateway, Appsync, Cognito Userpool and Identitypool, Bedrock Flows, Nova Lite, Nova pro and nova sonic
+- The solution should ultimately be available on the public url https://devposthackathon.tojf.link
+- All media data like images, videos and document files should be stored in S3 with completely isolated directories for each user.
+- All chat and memory data should be stored in dynamodb or s3 vector
+ 
+
+User Requirements
+
+ 
+
+The following will be the profiles and requirements for each
+
+SuperUser
+- JulianFrank will be the superuser with access to all the data and applications
+- The Superuser will be able to
+1. Approve User access to the multiple applications
+2. Approve User access to the Store Data. By default user chat and media should not be allowed to be stored in dynamodb or s3
+3. Remove users
+4. Reset Password of users
+5. Onboard new MCP applications
+6. Onboard new REST based Tools
+7. Onboard new Applications and provide access to the MCP applications and REST tools
+8. Set the email domains whitelisted for signup for username
+9. Create Groups from ui 
+10. Add, Remove users from different Groups
+11. Set, Change user type between General or Power
+
+General User
+- User can Signup from the application using their email address only from whitelisted domains as set by superuser
+- On login the new User will be presented with a UI that only has the following
+1.      a chat box for text based input to the Chat Agent
+2.      A mic button for realtime audio conversation using nova sonic
+3.      A image button to capture photo. Camera should allow the user to choose camera as a list
+4.      A video camera button to capture video
+5.      A clip button to upload media like images, video or documents
+6. Based on access provided by superuser, the user can also see additional buttons which would activate access to other Application Agents
+ 
+Power User
+1. These Users have access to all the user list
+2. They can use a Node Editor to build Relationships between users 
+3. The relationships themselves can be specified in the node editor dynamically 
+
