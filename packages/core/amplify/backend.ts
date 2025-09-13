@@ -6,6 +6,7 @@ import { WebSocketStack } from '../lib/cdk-stacks/websocket-stack';
 import { NovaSonicStack } from '../lib/cdk-stacks/nova-sonic-stack';
 import { AppSyncEventsStack } from '../lib/cdk-stacks/appsync-events-stack';
 import { AuthStack } from '../lib/cdk-stacks/auth-stack';
+import { ApplicationStack } from '../lib/cdk-stacks/application-stack';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -47,6 +48,14 @@ const novaSonic = new NovaSonicStack(novaSonicStack, 'NovaSonic', {
 // Add cross-function environment variables
 novaSonic.novaSonicProcessor.addEnvironment('SESSION_MANAGER_FUNCTION_ARN', novaSonic.sessionManager.functionArn);
 
+const applicationStack = backend.createStack('ApplicationStack');
+const applicationManagement = new ApplicationStack(applicationStack, 'ApplicationManagement', {
+  applicationsTableName: backend.data.resources.tables['Application'].tableName,
+  groupsTableName: backend.data.resources.tables['Group'].tableName,
+  applicationsTableArn: backend.data.resources.tables['Application'].tableArn,
+  groupsTableArn: backend.data.resources.tables['Group'].tableArn,
+});
+
 // Add AppSync Events configuration to amplify outputs
 backend.addOutput({
   custom: {
@@ -55,8 +64,13 @@ backend.addOutput({
       graphqlApiId: appSyncEvents.graphqlApiId,
       eventPublisherFunctionName: appSyncEvents.eventPublisher.functionName,
     },
+    applicationManagement: {
+      apiUrl: applicationManagement.applicationApi.url,
+      apiId: applicationManagement.applicationApi.restApiId,
+      functionName: applicationManagement.applicationFunction.functionName,
+    },
   },
 });
 
 // Export the backend and additional resources
-export { backend, authManagement, webSocket, novaSonic, appSyncEvents };
+export { backend, authManagement, webSocket, novaSonic, appSyncEvents, applicationManagement };

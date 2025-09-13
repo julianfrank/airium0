@@ -97,7 +97,8 @@
   - Write speech session lifecycle management code
   - _Requirements: 6.2_
 
-- [-] 8. Implement application management system
+- [x] 8. Implement application management system
+
 
 
 
