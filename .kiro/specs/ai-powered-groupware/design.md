@@ -30,9 +30,10 @@ graph TB
         CONN[(Connection Store - DynamoDB)]
     end
     
-    subgraph "Nova Sonic Integration"
-        NSL[Nova Sonic Lambda]
-        NS[Nova Sonic Service]
+    subgraph "Bedrock Nova Sonic Integration"
+        NSL[Nova Sonic Agent Lambda]
+        BR[Bedrock Runtime]
+        NSM[Nova Sonic Model - amazon.nova-sonic-v1:0]
     end
     
     subgraph "Core Services"
@@ -68,8 +69,9 @@ graph TB
     WSL --> ASE
     WSL --> NSL
     ASE --> ASAPI
-    NSL --> NS
-    NS --> L3
+    NSL --> BR
+    BR --> NSM
+    NSM --> L3
     RESTAPI --> L1
     RESTAPI --> L2
     L3 --> BF
@@ -101,7 +103,7 @@ airium/
 │   │   │   │   └── appsync-events-stack.ts
 │   │   │   └── lambda-functions/
 │   │   │       ├── websocket-handler/
-│   │   │       ├── nova-sonic-processor/
+│   │   │       ├── bedrock-nova-sonic-agent/
 │   │   │       ├── connection-manager/
 │   │   │       └── appsync-event-publisher/
 │   │   └── amplify_outputs.json
@@ -145,10 +147,32 @@ Following the aws-samples/sample-serverless-nova-sonic-chat pattern, the voice i
 - Manages real-time notifications and status updates
 - Integrates with Nova Sonic processing events
 
-### Nova Sonic Direct Integration
-- Processes audio data directly through WebSocket messages
-- Handles real-time voice-to-text and text-to-voice conversion
-- Manages conversation context and AI responses
+### Bedrock Nova Sonic Bidirectional Streaming
+- Uses InvokeModelWithBidirectionalStreamCommand for real-time speech-to-speech
+- Processes audio streams through Bedrock Runtime with amazon.nova-sonic-v1:0 model
+- Handles bidirectional streaming for continuous conversation
+- Manages ordered stream generation and response processing
+
+#### Implementation Details
+```typescript
+// Core Bedrock Nova Sonic Implementation
+const bedrockClient = new BedrockRuntimeClient({ region: 'us-east-1' });
+
+const request = new InvokeModelWithBidirectionalStreamCommand({
+  modelId: "amazon.nova-sonic-v1:0",
+  body: generateOrderedStream(), // initial request
+});
+
+// Bidirectional stream handling
+const response = await bedrockClient.send(request);
+const stream = response.body;
+
+// Process incoming audio and generate responses
+for await (const chunk of stream) {
+  // Handle streaming audio responses
+  await processStreamChunk(chunk, connectionId);
+}
+```
 
 ### Connection Management
 - DynamoDB table stores active WebSocket connections
@@ -173,26 +197,27 @@ sequenceDiagram
     
     UI->>WS: Start voice session
     WS->>Lambda: onMessage (start)
-    Lambda->>NS: Initialize Nova Sonic session
+    Lambda->>NS: InvokeModelWithBidirectionalStreamCommand
+    Note over Lambda,NS: modelId: "amazon.nova-sonic-v1:0"<br/>body: generateOrderedStream()
     Lambda->>ASE: Publish session started event
     ASE->>AS: Trigger subscription
     AS->>UI: Session status update
     
-    UI->>WS: Audio data (base64)
+    UI->>WS: Audio chunks (base64)
     WS->>Lambda: onMessage (audio)
-    Lambda->>NS: Process audio directly
+    Lambda->>NS: Stream audio to bidirectional stream
     Lambda->>ASE: Publish processing event
     
-    NS->>Lambda: Voice response + AI content
+    NS->>Lambda: Bidirectional stream response
     Lambda->>ASE: Publish response event
     ASE->>AS: Trigger subscription
     AS->>UI: Real-time response
-    Lambda->>WS: Send response
+    Lambda->>WS: Send audio response
     WS->>UI: Voice output + text
     
     UI->>WS: End session
     WS->>Lambda: onMessage (end)
-    Lambda->>NS: Close session
+    Lambda->>NS: Close bidirectional stream
     Lambda->>ASE: Publish session ended event
     Lambda->>DB: Update connection
 ```
@@ -242,21 +267,24 @@ sequenceDiagram
   }
   ```
 
-#### 3. Nova Sonic Integration Service
-- **Technology**: WebSocket API Gateway + Lambda + Nova Sonic
+#### 3. Bedrock Nova Sonic Integration Service
+- **Technology**: WebSocket API Gateway + Lambda + Bedrock Runtime + Nova Sonic Model
 - **Architecture Pattern**: Following aws-samples/sample-serverless-nova-sonic-chat
+- **Model**: amazon.nova-sonic-v1:0
 - **Responsibilities**:
   - Real-time WebSocket connection management
-  - Direct audio processing through Nova Sonic
+  - Bidirectional streaming with Bedrock Nova Sonic
   - Voice session management and context handling
-  - Bidirectional voice communication
+  - Ordered stream generation and processing
 - **Key Interfaces**:
   ```typescript
-  interface NovaSonicService {
-    initializeSession(connectionId: string, userId: string): Promise<string>
-    processAudioData(audioData: string, sessionId: string): Promise<VoiceResponse>
-    endSession(sessionId: string): Promise<void>
-    sendVoiceResponse(response: string, connectionId: string): Promise<void>
+  interface BedrockNovaSonicService {
+    initializeBidirectionalStream(connectionId: string, userId: string): Promise<string>
+    invokeModelWithBidirectionalStream(modelId: string, body: any): Promise<BidirectionalStream>
+    generateOrderedStream(initialRequest?: any): any
+    processAudioStream(audioChunk: Buffer, streamId: string): Promise<void>
+    handleStreamResponse(response: any, connectionId: string): Promise<void>
+    closeBidirectionalStream(streamId: string): Promise<void>
   }
   
   interface WebSocketHandler {

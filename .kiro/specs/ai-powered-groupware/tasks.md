@@ -77,15 +77,30 @@
   - Set up event routing and subscription management
   - _Requirements: 9.1, 9.4_
 
-- [ ] 7. Build Nova Sonic integration service
-  - Create Nova Sonic CDK stack following aws-samples pattern
-  - Implement Nova Sonic session management
-  - Create audio processing Lambda functions
-  - Integrate with WebSocket and AppSync Events
-  - Write voice session handling code
+- [x] 7. Build Bedrock Nova Sonic Speech-to-Speech integration
+
+
+
+
+
+
+
+
+
+
+
+  - Create Bedrock Nova Sonic CDK stack following aws-samples/sample-serverless-nova-sonic-chat pattern
+  - Implement Speech-to-Speech Lambda agent using Bedrock Nova Sonic model
+  - Create audio streaming handlers for real-time speech processing based on /app/src/agent code
+  - Implement conversation state management and context handling
+  - Integrate Bedrock Nova Sonic responses with WebSocket and AppSync Events
+  - Write speech session lifecycle management code
   - _Requirements: 6.2_
 
-- [ ] 8. Implement application management system
+- [-] 8. Implement application management system
+
+
+
   - Create CRUD operations for REST/MCP/Inbuilt applications
   - Build application-group association management
   - Implement application parameter handling

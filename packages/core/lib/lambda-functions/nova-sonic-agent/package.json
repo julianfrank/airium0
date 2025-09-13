@@ -1,0 +1,18 @@
+{
+  "name": "nova-sonic-agent",
+  "version": "1.0.0",
+  "description": "Nova Sonic agent Lambda function for WebSocket coordination",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.0.0",
+    "@aws-sdk/client-lambda": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "typescript": "^5.0.0"
+  }
+}

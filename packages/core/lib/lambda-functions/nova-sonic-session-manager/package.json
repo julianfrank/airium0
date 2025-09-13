@@ -1,0 +1,20 @@
+{
+  "name": "nova-sonic-session-manager",
+  "version": "1.0.0",
+  "description": "Nova Sonic session management Lambda function",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.0.0",
+    "@aws-sdk/client-s3": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "typescript": "^5.0.0"
+  }
+}

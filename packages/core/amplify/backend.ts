@@ -44,6 +44,9 @@ const novaSonic = new NovaSonicStack(novaSonicStack, 'NovaSonic', {
   connectionsTableName: webSocket.connectionsTable.tableName,
 });
 
+// Add cross-function environment variables
+novaSonic.novaSonicProcessor.addEnvironment('SESSION_MANAGER_FUNCTION_ARN', novaSonic.sessionManager.functionArn);
+
 // Add AppSync Events configuration to amplify outputs
 backend.addOutput({
   custom: {
