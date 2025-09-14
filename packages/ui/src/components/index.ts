@@ -28,5 +28,47 @@ export {
 } from './websocket';
 export type { WebSocketProviderProps, WebSocketStatusProps } from './websocket';
 
+// AppSync Components
+export {
+  EventSubscriptions,
+  SubscriptionStatus,
+  VoiceSessionEvents,
+  ChatEvents,
+  UIControlEvents,
+  SubscriptionProvider,
+  useSubscriptionContext,
+  SubscriptionProviderStatus,
+  withSubscriptions
+} from './appsync';
+export type {
+  EventSubscriptionsProps,
+  SubscriptionStatusProps,
+  VoiceSessionEventsProps,
+  ChatEventsProps,
+  UIControlEventsProps,
+  SubscriptionProviderProps,
+  SubscriptionContextValue,
+  SubscriptionProviderStatusProps
+} from './appsync';
+
+// Voice Components
+export {
+  VoiceChat,
+  AudioStreamer,
+  VoiceSessionManager,
+  VoiceFeedback,
+  AudioVisualizer
+} from './voice';
+export type {
+  VoiceChatProps,
+  VoiceChatState,
+  AudioStreamerProps,
+  AudioStreamerRef,
+  VoiceSessionManagerProps,
+  VoiceSessionManagerRef,
+  VoiceFeedbackProps,
+  AudioVisualizerProps
+} from './voice';
+
 // Utilities
 export { cn } from '../lib/utils';

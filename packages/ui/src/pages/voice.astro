@@ -1,0 +1,143 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Voice Chat - AIrium">
+  <div id="voice-page" class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Voice Chat</h1>
+        <p class="text-gray-600">
+          Interact with AI using natural voice conversation powered by Amazon Nova Sonic
+        </p>
+      </div>
+      
+      <div id="voice-chat-container" class="space-y-6">
+        <!-- Voice chat component will be mounted here -->
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { VoiceChat } from '../components/voice/VoiceChat';
+  import { WebSocketProvider } from '../components/websocket/WebSocketProvider';
+  import { SubscriptionProvider } from '../components/appsync/SubscriptionProvider';
+  import { AuthProvider } from '../components/auth/AuthProvider';
+  import React from 'react';
+  import { createRoot } from 'react-dom/client';
+
+  // Mount the React component
+  const container = document.getElementById('voice-chat-container');
+  if (container) {
+    const root = createRoot(container);
+    
+    root.render(
+      React.createElement(AuthProvider, {}, 
+        React.createElement(WebSocketProvider, {},
+          React.createElement(SubscriptionProvider, {},
+            React.createElement(VoiceChatPage)
+          )
+        )
+      )
+    );
+  }
+
+  function VoiceChatPage() {
+    const [userId, setUserId] = React.useState<string>('');
+    const [transcriptions, setTranscriptions] = React.useState<string[]>([]);
+    const [responses, setResponses] = React.useState<string[]>([]);
+
+    // Get user ID from auth context (simplified for now)
+    React.useEffect(() => {
+      // In a real app, this would come from the auth context
+      setUserId('demo-user-' + Date.now());
+    }, []);
+
+    const handleTranscription = (text: string) => {
+      setTranscriptions(prev => [...prev, text]);
+    };
+
+    const handleAIResponse = (response: string) => {
+      setResponses(prev => [...prev, response]);
+    };
+
+    const handleError = (error: string) => {
+      console.error('Voice chat error:', error);
+      // You could show a toast notification here
+    };
+
+    if (!userId) {
+      return React.createElement('div', { className: 'text-center py-8' },
+        React.createElement('div', { className: 'animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4' }),
+        React.createElement('p', { className: 'text-gray-600' }, 'Loading...')
+      );
+    }
+
+    return React.createElement('div', { className: 'space-y-6' },
+      // Main voice chat component
+      React.createElement(VoiceChat, {
+        userId,
+        onTranscription: handleTranscription,
+        onAIResponse: handleAIResponse,
+        onError: handleError,
+        className: 'mb-6'
+      }),
+
+      // Conversation history
+      React.createElement('div', { className: 'grid md:grid-cols-2 gap-6' },
+        // Transcriptions
+        React.createElement('div', { className: 'space-y-3' },
+          React.createElement('h3', { className: 'text-lg font-semibold text-gray-900' }, 'Your Voice Input'),
+          React.createElement('div', { className: 'space-y-2 max-h-64 overflow-y-auto' },
+            transcriptions.length === 0 
+              ? React.createElement('p', { className: 'text-gray-500 text-sm italic' }, 'No voice input yet...')
+              : transcriptions.map((text, index) => 
+                  React.createElement('div', { 
+                    key: index, 
+                    className: 'p-3 bg-blue-50 border border-blue-200 rounded-md' 
+                  },
+                    React.createElement('p', { className: 'text-sm text-blue-700' }, text)
+                  )
+                )
+          )
+        ),
+
+        // AI Responses
+        React.createElement('div', { className: 'space-y-3' },
+          React.createElement('h3', { className: 'text-lg font-semibold text-gray-900' }, 'AI Responses'),
+          React.createElement('div', { className: 'space-y-2 max-h-64 overflow-y-auto' },
+            responses.length === 0 
+              ? React.createElement('p', { className: 'text-gray-500 text-sm italic' }, 'No AI responses yet...')
+              : responses.map((response, index) => 
+                  React.createElement('div', { 
+                    key: index, 
+                    className: 'p-3 bg-green-50 border border-green-200 rounded-md' 
+                  },
+                    React.createElement('p', { className: 'text-sm text-green-700' }, response)
+                  )
+                )
+          )
+        )
+      ),
+
+      // Instructions
+      React.createElement('div', { className: 'mt-8 p-4 bg-gray-50 border border-gray-200 rounded-md' },
+        React.createElement('h4', { className: 'text-sm font-medium text-gray-900 mb-2' }, 'How to use Voice Chat:'),
+        React.createElement('ul', { className: 'text-sm text-gray-600 space-y-1' },
+          React.createElement('li', {}, '1. Click the microphone button to start recording'),
+          React.createElement('li', {}, '2. Speak clearly into your microphone'),
+          React.createElement('li', {}, '3. Click stop when you\'re done speaking'),
+          React.createElement('li', {}, '4. Wait for AI processing and response'),
+          React.createElement('li', {}, '5. Listen to the AI\'s voice response')
+        )
+      )
+    );
+  }
+</script>
+
+<style>
+  .container {
+    min-height: calc(100vh - 4rem);
+  }
+</style>

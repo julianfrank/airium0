@@ -195,7 +195,13 @@
   - Write WebSocket client tests
   - _Requirements: 6.2, 9.4_
 
-- [ ] 15. Build AppSync GraphQL client and subscriptions
+- [x] 15. Build AppSync GraphQL client and subscriptions
+
+
+
+
+
+
   - Set up AppSync client configuration
   - Implement GraphQL subscription management
   - Create real-time event handling components
@@ -203,7 +209,13 @@
   - Write subscription handling tests
   - _Requirements: 9.1, 9.4_
 
-- [ ] 16. Implement voice chat interface with Nova Sonic
+- [x] 16. Implement voice chat interface with Nova Sonic
+
+
+
+
+
+
   - Create voice chat React components
   - Implement audio recording and streaming
   - Build Nova Sonic integration client
