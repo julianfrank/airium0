@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Text Chat - AIrium">
+  <div id="chat-page" class="container mx-auto px-4 py-8 h-screen flex flex-col">
+    <div class="max-w-4xl mx-auto flex-1 flex flex-col">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">AI Text Chat</h1>
+        <p class="text-gray-600">
+          Have a conversation with AI using text input and get intelligent responses
+        </p>
+      </div>
+      
+      <div id="chat-container" class="flex-1 min-h-0">
+        <!-- Chat interface component will be mounted here -->
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import React from 'react';
+  import { createRoot } from 'react-dom/client';
+  import { ChatInterface } from '../components/chat/ChatInterface';
+  import { WebSocketProvider } from '../components/websocket/WebSocketProvider';
+  import { SubscriptionProvider } from '../components/appsync/SubscriptionProvider';
+  import { AuthProvider } from '../components/auth/AuthProvider';
+
+  // Mount the React component
+  const container = document.getElementById('chat-container');
+  
+  if (container) {
+    const root = createRoot(container);
+    
+    root.render(
+      React.createElement(AuthProvider, {},
+        React.createElement(WebSocketProvider, {},
+          React.createElement(SubscriptionProvider, {},
+            React.createElement(ChatPage)
+          )
+        )
+      )
+    );
+  }
+
+  function ChatPage() {
+    const [userId, setUserId] = React.useState<string>('');
+    const [messages, setMessages] = React.useState<any[]>([]);
+    const [error, setError] = React.useState<string | null>(null);
+
+    // Get user ID from auth context (simplified for demo)
+    React.useEffect(() => {
+      // In a real app, this would come from the auth context
+      setUserId('demo-user-' + Math.random().toString(36).substr(2, 9));
+    }, []);
+
+    const handleMessage = React.useCallback((message: any) => {
+      console.log('New message:', message);
+      setMessages(prev => [...prev, message]);
+    }, []);
+
+    const handleError = React.useCallback((error: string) => {
+      console.error('Chat error:', error);
+      setError(error);
+      
+      // Clear error after 5 seconds
+      setTimeout(() => setError(null), 5000);
+    }, []);
+
+    if (!userId) {
+      return React.createElement('div', { 
+        className: 'flex items-center justify-center h-full' 
+      }, 'Loading...');
+    }
+
+    return React.createElement('div', { className: 'h-full flex flex-col' },
+      // Error display
+      error && React.createElement('div', { 
+        className: 'mb-4 p-3 bg-red-100 border border-red-300 rounded-md text-red-700' 
+      }, error),
+      
+      // Main chat interface
+      React.createElement(ChatInterface, {
+        userId,
+        onMessage: handleMessage,
+        onError: handleError,
+        className: 'flex-1'
+      }),
+      
+      // Debug info (remove in production)
+      React.createElement('div', { className: 'mt-4 p-2 bg-gray-100 rounded text-xs text-gray-600' },
+        React.createElement('div', {}, `User ID: ${userId}`),
+        React.createElement('div', {}, `Messages: ${messages.length}`),
+        React.createElement('div', {}, `Status: ${error ? 'Error' : 'Ready'}`)
+      )
+    );
+  }
+</script>

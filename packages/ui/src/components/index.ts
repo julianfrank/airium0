@@ -70,5 +70,23 @@ export type {
   AudioVisualizerProps
 } from './voice';
 
+// Chat Components
+export {
+  ChatInterface,
+  ChatMessage,
+  ChatInput,
+  ChatHistory,
+  AIResponseHandler
+} from './chat';
+export type {
+  ChatInterfaceProps,
+  ChatMessageProps,
+  ChatInputProps,
+  ChatHistoryProps,
+  AIResponseHandlerProps,
+  ChatState,
+  Message
+} from './chat';
+
 // Utilities
 export { cn } from '../lib/utils';
