@@ -1,4 +1,4 @@
-import type { ChatMessage as SharedChatMessage, ChatEvent } from '@airium/shared/types';
+import type { ChatMessage as SharedChatMessage, ChatEvent } from '@airium/shared';
 
 export interface Message extends SharedChatMessage {
   isUser: boolean;

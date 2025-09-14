@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
-import { Group } from '../../../../shared/src/types/auth';
+import { Group } from '@airium/shared';
 
 interface GroupTableProps {
   groups: Group[];

@@ -1,4 +1,7 @@
-import type { WebSocketMessage } from '@airium/shared/types';
+import type { WebSocketMessage } from '@airium/shared';
+
+// Re-export for other modules
+export type { WebSocketMessage };
 import { amplifyOutputs } from './amplify';
 import { withRetry, retryConditions, CircuitBreaker } from './retry-utils';
 

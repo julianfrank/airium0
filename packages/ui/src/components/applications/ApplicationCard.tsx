@@ -1,5 +1,5 @@
 import React from 'react';
-import { Application } from '@airium/shared/types';
+import { Application } from '@airium/shared';
 import { Card } from '../ui/card';
 
 interface ApplicationCardProps {

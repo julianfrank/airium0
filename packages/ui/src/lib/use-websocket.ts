@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { ConnectionManager, type ConnectionManagerConfig, type ConnectionState, type MessageHandler } from './connection-manager.js';
-import type { WebSocketMessage } from '@airium/shared/types';
+import type { WebSocketMessage } from '@airium/shared';
 
 export interface UseWebSocketOptions extends Omit<ConnectionManagerConfig, 'url'> {
   url?: string;

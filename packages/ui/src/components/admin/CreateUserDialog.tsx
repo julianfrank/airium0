@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Group } from '../../../../shared/src/types/auth';
+import { Group } from '@airium/shared';
 
 interface CreateUserDialogProps {
   open: boolean;

@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { UserManagement } from '../UserManagement';
 
 // Mock the shared types
-vi.mock('../../../../../shared/src/types/auth', () => ({
+vi.mock('@airium/shared', () => ({
   User: {},
   Group: {}
 }));

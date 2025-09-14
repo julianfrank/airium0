@@ -5,7 +5,7 @@ import { GroupTable } from './GroupTable';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { EditGroupDialog } from './EditGroupDialog';
 import { DeleteGroupDialog } from './DeleteGroupDialog';
-import { Group } from '../../../../shared/src/types/auth';
+import { Group } from '@airium/shared';
 
 interface GroupManagementProps {
   className?: string;

@@ -6,7 +6,7 @@ import { CreateApplicationDialog } from './CreateApplicationDialog';
 import { EditApplicationDialog } from './EditApplicationDialog';
 import { DeleteApplicationDialog } from './DeleteApplicationDialog';
 import { GroupApplicationAssignmentDialog } from './GroupApplicationAssignmentDialog';
-import { Application, Group } from '../../../../shared/src/types';
+import { Application, Group } from '@airium/shared';
 
 interface ApplicationManagementProps {
   className?: string;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
-import { Application, Group } from '../../../../shared/src/types';
+import { Application, Group } from '@airium/shared';
 
 interface ApplicationTableProps {
   applications: Application[];

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ChatServiceImpl, getChatService } from '../ChatService';
-import type { WebSocketMessage } from '@airium/shared/types';
+import type { WebSocketMessage } from '@airium/shared';
 
 // Mock dependencies
 const mockWebSocketClient = {

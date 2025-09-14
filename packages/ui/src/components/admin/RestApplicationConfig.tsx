@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Application } from '../../../../shared/src/types';
+import { Application } from '@airium/shared';
 
 interface RestApplicationConfigProps {
   config: Application['config'];

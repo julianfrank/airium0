@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { User } from '../../../../shared/src/types/auth';
+import { User } from '@airium/shared';
 
 interface DeleteUserDialogProps {
   open: boolean;

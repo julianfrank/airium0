@@ -3,16 +3,13 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@airium/shared/*": ["../../shared/*"],
-      "@airium/core/*": ["../core/*"]
+      "@/*": ["./src/*"]
     },
     "jsx": "react-jsx",
     "jsxImportSource": "react"
   },
   "include": [
-    "src/**/*",
-    "../../shared/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",

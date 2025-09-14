@@ -3,7 +3,7 @@ import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Group } from '../../../../shared/src/types/auth';
+import { Group } from '@airium/shared';
 
 interface EditGroupDialogProps {
   open: boolean;

@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useApplicationAccess } from '../use-application-access';
-import { Application } from '@airium/shared/types';
+import { Application } from '@airium/shared';
 import { getCurrentUser } from 'aws-amplify/auth';
 
 // Mock AWS Amplify

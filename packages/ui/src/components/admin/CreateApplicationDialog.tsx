@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Application, Group } from '../../../../shared/src/types';
+import { Application, Group } from '@airium/shared';
 import { RestApplicationConfig } from './RestApplicationConfig';
 import { McpApplicationConfig } from './McpApplicationConfig';
 import { InbuiltApplicationConfig } from './InbuiltApplicationConfig';

@@ -2,7 +2,7 @@ import React from 'react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Application } from '../../../../shared/src/types';
+import { Application } from '@airium/shared';
 
 interface InbuiltApplicationConfigProps {
   config: Application['config'];

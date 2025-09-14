@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Application } from '../../../../shared/src/types';
+import { Application } from '@airium/shared';
 
 interface DeleteApplicationDialogProps {
   open: boolean;

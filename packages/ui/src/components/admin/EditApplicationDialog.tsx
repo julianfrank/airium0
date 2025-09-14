@@ -3,7 +3,7 @@ import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Application, Group } from '../../../../shared/src/types';
+import { Application, Group } from '@airium/shared';
 import { RestApplicationConfig } from './RestApplicationConfig';
 import { McpApplicationConfig } from './McpApplicationConfig';
 import { InbuiltApplicationConfig } from './InbuiltApplicationConfig';

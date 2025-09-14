@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Application, Group } from '../../../../shared/src/types';
+import { Application, Group } from '@airium/shared';
 
 interface GroupApplicationAssignmentDialogProps {
   open: boolean;

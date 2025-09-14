@@ -5,7 +5,7 @@ import { UserTable } from './UserTable';
 import { CreateUserDialog } from './CreateUserDialog';
 import { EditUserDialog } from './EditUserDialog';
 import { DeleteUserDialog } from './DeleteUserDialog';
-import { User, Group } from '../../../../shared/src/types/auth';
+import { User, Group } from '@airium/shared';
 
 interface UserManagementProps {
   className?: string;

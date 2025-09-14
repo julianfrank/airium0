@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ApplicationCard } from '../ApplicationCard';
-import { Application } from '@airium/shared/types';
+import { Application } from '@airium/shared';
 
 const mockRestApplication: Application = {
   PK: 'APP#app1',

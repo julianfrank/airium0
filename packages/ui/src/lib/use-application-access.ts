@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Application } from '@airium/shared/types';
+import { Application } from '@airium/shared';
 import { getCurrentUser } from 'aws-amplify/auth';
 import { generateClient } from 'aws-amplify/api';
 

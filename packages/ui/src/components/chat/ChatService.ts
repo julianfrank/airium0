@@ -2,7 +2,7 @@ import { WebSocketClient } from '../../lib/websocket-client';
 import { generateClient } from 'aws-amplify/api';
 import { PUBLISH_CHAT_EVENT } from '../../lib/graphql/queries';
 import type { ChatService, Message } from './types';
-import type { WebSocketMessage, ChatMessage } from '@airium/shared/types';
+import type { WebSocketMessage, ChatMessage } from '@airium/shared';
 
 export class ChatServiceImpl implements ChatService {
   private wsClient: WebSocketClient | null = null;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Application } from '@airium/shared/types';
+import { Application } from '@airium/shared';
 import { ApplicationCard } from './ApplicationCard';
 import { ApplicationFilter } from './ApplicationFilter';
 import { ApplicationLauncher } from './ApplicationLauncher';

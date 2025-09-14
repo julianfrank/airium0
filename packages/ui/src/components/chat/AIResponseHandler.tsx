@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { useChatSubscription } from '../../lib/use-appsync-subscriptions';
 import type { AIResponseHandlerProps, Message } from './types';
-import type { ChatEvent } from '@airium/shared/types';
+import type { ChatEvent } from '@airium/shared';
 
 export function AIResponseHandler({ 
   userId, 

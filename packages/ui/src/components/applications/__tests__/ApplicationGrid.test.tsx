@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ApplicationGrid } from '../ApplicationGrid';
-import { Application } from '@airium/shared/types';
+import { Application } from '@airium/shared';
 
 // Mock the useApplicationAccess hook
 vi.mock('../../../lib/use-application-access', () => ({

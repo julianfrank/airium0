@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
-import { User, Group } from '../../../../shared/src/types/auth';
+import type { User, Group } from '@airium/shared';
 
 interface UserTableProps {
   users: User[];
@@ -31,8 +31,8 @@ export const UserTable: React.FC<UserTableProps> = ({
   };
 
   const getProfileBadgeColor = (profile: 'ADMIN' | 'GENERAL') => {
-    return profile === 'ADMIN' 
-      ? 'bg-red-100 text-red-800 border-red-200' 
+    return profile === 'ADMIN'
+      ? 'bg-red-100 text-red-800 border-red-200'
       : 'bg-blue-100 text-blue-800 border-blue-200';
   };
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ApplicationLauncher } from '../ApplicationLauncher';
-import { Application } from '@airium/shared/types';
+import { Application } from '@airium/shared';
 
 // Mock window.open and window.location
 const mockWindowOpen = vi.fn();
