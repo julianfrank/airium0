@@ -1,13 +1,14 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { AdminDashboard } from '../../components/admin/AdminDashboard';
 ---
 
-<BaseLayout title="AIrium - Admin Dashboard">
+<AdminLayout title="AIrium - Admin Dashboard">
   <div class="space-y-6">
     <div>
       <h1 class="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
       <p class="text-muted-foreground">
-        Manage users, applications, and system settings
+        Manage users, groups, applications, and system settings
       </p>
     </div>
 
@@ -18,71 +19,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </p>
     </div>
 
-    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div class="flex flex-col space-y-1.5 p-6">
-          <h3 class="text-2xl font-semibold leading-none tracking-tight">User Management</h3>
-          <p class="text-sm text-muted-foreground">
-            Add, remove, and manage user accounts and groups
-          </p>
-        </div>
-        <div class="p-6 pt-0">
-          <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">Manage Users</button>
-        </div>
-      </div>
-
-      <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div class="flex flex-col space-y-1.5 p-6">
-          <h3 class="text-2xl font-semibold leading-none tracking-tight">Applications</h3>
-          <p class="text-sm text-muted-foreground">
-            Configure REST, MCP, and inbuilt applications
-          </p>
-        </div>
-        <div class="p-6 pt-0">
-          <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">Manage Apps</button>
-        </div>
-      </div>
-
-      <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div class="flex flex-col space-y-1.5 p-6">
-          <h3 class="text-2xl font-semibold leading-none tracking-tight">System Settings</h3>
-          <p class="text-sm text-muted-foreground">
-            Configure system-wide settings and preferences
-          </p>
-        </div>
-        <div class="p-6 pt-0">
-          <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">Settings</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-      <div class="flex flex-col space-y-1.5 p-6">
-        <h3 class="text-xl font-semibold leading-none tracking-tight">Quick Stats</h3>
-      </div>
-      <div class="p-6 pt-0">
-        <div class="grid gap-4 md:grid-cols-4">
-          <div class="text-center">
-            <div class="text-2xl font-bold">12</div>
-            <div class="text-sm text-muted-foreground">Total Users</div>
-          </div>
-          <div class="text-center">
-            <div class="text-2xl font-bold">5</div>
-            <div class="text-sm text-muted-foreground">Active Groups</div>
-          </div>
-          <div class="text-center">
-            <div class="text-2xl font-bold">8</div>
-            <div class="text-sm text-muted-foreground">Applications</div>
-          </div>
-          <div class="text-center">
-            <div class="text-2xl font-bold">24</div>
-            <div class="text-sm text-muted-foreground">Active Sessions</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <AdminDashboard client:load />
   </div>
-</BaseLayout>
+</AdminLayout>
 
 <style>
   @import '../../styles/globals.css';
