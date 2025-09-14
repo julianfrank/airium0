@@ -13,10 +13,10 @@ export class SimpleDataService {
   async createUser(email: string, profile: 'ADMIN' | 'GENERAL' = 'GENERAL') {
     try {
       const result = await this.client.models.User.create({
-        email,
-        profile,
+        email: [email],
+        profile: [profile],
         groups: [profile],
-        preferences: {},
+        preferences: [JSON.stringify({})],
       });
       return result.data;
     } catch (error) {
@@ -49,11 +49,11 @@ export class SimpleDataService {
   async createGroup(name: string, description?: string) {
     try {
       const result = await this.client.models.Group.create({
-        name,
-        description,
+        name: [name],
+        description: description ? [description] : undefined,
         applications: [],
-        memberCount: 0,
-        isDefault: false,
+        memberCount: ['0'],
+        isDefault: ['false'],
       });
       return result.data;
     } catch (error) {
@@ -80,12 +80,12 @@ export class SimpleDataService {
   ) {
     try {
       const result = await this.client.models.Application.create({
-        type,
-        name,
-        config,
+        type: [type],
+        name: [name],
+        config: [JSON.stringify(config)],
         groups: [],
-        isActive: true,
-        version: '1.0.0',
+        isActive: ['true'],
+        version: ['1.0.0'],
       });
       return result.data;
     } catch (error) {
@@ -108,12 +108,12 @@ export class SimpleDataService {
   async createChatSession(userId: string, title?: string) {
     try {
       const result = await this.client.models.ChatSession.create({
-        userId,
-        title,
-        messageCount: 0,
-        context: {},
-        metadata: {},
-        isActive: true,
+        userId: [userId],
+        title: title ? [title] : undefined,
+        messageCount: ['0'],
+        context: [JSON.stringify({})],
+        metadata: [JSON.stringify({})],
+        isActive: ['true'],
       });
       return result.data;
     } catch (error) {
@@ -130,13 +130,13 @@ export class SimpleDataService {
   ) {
     try {
       const result = await this.client.models.ChatMessage.create({
-        sessionId,
-        userId,
-        type,
-        content,
-        metadata: {},
+        sessionId: [sessionId],
+        userId: [userId],
+        type: [type],
+        content: [content],
+        metadata: [JSON.stringify({})],
         mediaUrls: [],
-        timestamp: new Date().toISOString(),
+        timestamp: [new Date().toISOString()],
       });
       return result.data;
     } catch (error) {
@@ -149,11 +149,11 @@ export class SimpleDataService {
   async createVoiceSession(connectionId: string, userId: string) {
     try {
       const result = await this.client.models.VoiceSession.create({
-        connectionId,
-        userId,
-        status: 'ACTIVE',
-        audioFormat: 'webm',
-        duration: 0,
+        connectionId: [connectionId],
+        userId: [userId],
+        status: ['ACTIVE'],
+        audioFormat: ['webm'],
+        duration: ['0'],
       });
       return result.data;
     } catch (error) {
@@ -174,17 +174,17 @@ export class SimpleDataService {
   ) {
     try {
       const result = await this.client.models.MediaFile.create({
-        userId,
-        fileName,
-        fileType,
-        fileSize,
-        mimeType,
-        s3Key,
-        s3Bucket,
-        uploadStatus: 'UPLOADING',
-        isPublic: false,
+        userId: [userId],
+        fileName: [fileName],
+        fileType: [fileType],
+        fileSize: [String(fileSize)],
+        mimeType: [mimeType],
+        s3Key: [s3Key],
+        s3Bucket: [s3Bucket],
+        uploadStatus: ['UPLOADING'],
+        isPublic: ['false'],
         tags: [],
-        metadata: {},
+        metadata: [JSON.stringify({})],
       });
       return result.data;
     } catch (error) {
@@ -201,10 +201,10 @@ export class SimpleDataService {
   ) {
     try {
       const result = await this.client.models.UserMemory.create({
-        userId,
-        type,
-        content,
-        isActive: true,
+        userId: [userId],
+        type: [type],
+        content: [JSON.stringify(content)],
+        isActive: ['true'],
       });
       return result.data;
     } catch (error) {
@@ -222,13 +222,13 @@ export class SimpleDataService {
   ) {
     try {
       const result = await this.client.models.Notification.create({
-        userId,
-        type,
-        title,
-        message,
-        data: {},
-        isRead: false,
-        isPersistent: false,
+        userId: [userId],
+        type: [type],
+        title: [title],
+        message: [message],
+        data: [JSON.stringify({})],
+        isRead: ['false'],
+        isPersistent: ['false'],
       });
       return result.data;
     } catch (error) {

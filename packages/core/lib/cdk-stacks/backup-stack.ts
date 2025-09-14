@@ -58,8 +58,9 @@ export class BackupStack extends Stack {
 
   private addBackupRules(props: BackupStackProps) {
     // Daily backup rule
-    this.backupPlan.addRule(backup.BackupPlanRule.daily(this.backupVault, {
+    this.backupPlan.addRule(new backup.BackupPlanRule({
       ruleName: `airium-${props.environment}-daily-backup`,
+      scheduleExpression: events.Schedule.cron({ hour: '1', minute: '0' }), // Daily at 1 AM
       deleteAfter: Duration.days(props.retentionDays),
       startWindow: Duration.hours(1), // 1 hour window to start backup
       completionWindow: Duration.hours(8), // 8 hours to complete backup
@@ -67,16 +68,19 @@ export class BackupStack extends Stack {
 
     // Weekly backup rule for production
     if (props.environment === 'prod') {
-      this.backupPlan.addRule(backup.BackupPlanRule.weekly(this.backupVault, {
+      this.backupPlan.addRule(new backup.BackupPlanRule({
         ruleName: `airium-${props.environment}-weekly-backup`,
+        scheduleExpression: events.Schedule.cron({ hour: '2', minute: '0', weekDay: 'SUN' }), // Weekly on Sunday at 2 AM
         deleteAfter: Duration.days(90), // Keep weekly backups for 90 days
         startWindow: Duration.hours(2),
         completionWindow: Duration.hours(12),
       }));
 
       // Monthly backup rule for production
-      this.backupPlan.addRule(backup.BackupPlanRule.monthly1Year(this.backupVault, {
+      this.backupPlan.addRule(new backup.BackupPlanRule({
         ruleName: `airium-${props.environment}-monthly-backup`,
+        scheduleExpression: events.Schedule.cron({ hour: '3', minute: '0', day: '1' }), // Monthly on 1st at 3 AM
+        deleteAfter: Duration.days(365), // Keep monthly backups for 1 year
         startWindow: Duration.hours(2),
         completionWindow: Duration.hours(12),
       }));
@@ -96,7 +100,7 @@ export class BackupStack extends Stack {
     });
 
     // Create backup selection for DynamoDB tables
-    const dynamoSelection = new backup.BackupSelection(this, 'DynamoDBBackupSelection', {
+    new backup.BackupSelection(this, 'DynamoDBBackupSelection', {
       backupPlan: this.backupPlan,
       resources: tables.map(table => backup.BackupResource.fromDynamoDbTable(table)),
       role: backupRole,
@@ -117,7 +121,7 @@ export class BackupStack extends Stack {
     });
 
     // Create backup selection for S3 buckets
-    const s3Selection = new backup.BackupSelection(this, 'S3BackupSelection', {
+    new backup.BackupSelection(this, 'S3BackupSelection', {
       backupPlan: this.backupPlan,
       resources: buckets.map(bucket => backup.BackupResource.fromArn(bucket.bucketArn)),
       role: s3BackupRole,

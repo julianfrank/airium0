@@ -1,6 +1,7 @@
 import { Stack, StackProps, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -69,7 +70,7 @@ export class MonitoringStack extends Stack {
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
         alarmDescription: `High error rate for ${func.functionName}`,
       });
-      errorAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alarmTopic));
+      errorAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
 
       // Duration alarm
       const durationAlarm = new cloudwatch.Alarm(this, `${func.functionName}DurationAlarm`, {
@@ -81,7 +82,7 @@ export class MonitoringStack extends Stack {
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
         alarmDescription: `High duration for ${func.functionName}`,
       });
-      durationAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alarmTopic));
+      durationAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
 
       // Throttle alarm
       const throttleAlarm = new cloudwatch.Alarm(this, `${func.functionName}ThrottleAlarm`, {
@@ -93,7 +94,7 @@ export class MonitoringStack extends Stack {
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
         alarmDescription: `Throttling detected for ${func.functionName}`,
       });
-      throttleAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alarmTopic));
+      throttleAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
 
       // Add widgets to dashboard
       lambdaWidgets.push(
@@ -143,7 +144,7 @@ export class MonitoringStack extends Stack {
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
         alarmDescription: `High read capacity utilization for ${table.tableName}`,
       });
-      readCapacityAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alarmTopic));
+      readCapacityAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
 
       const writeCapacityAlarm = new cloudwatch.Alarm(this, `${table.tableName}WriteCapacityAlarm`, {
         metric: table.metricConsumedWriteCapacityUnits({
@@ -154,11 +155,11 @@ export class MonitoringStack extends Stack {
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
         alarmDescription: `High write capacity utilization for ${table.tableName}`,
       });
-      writeCapacityAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alarmTopic));
+      writeCapacityAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
 
-      // Throttling alarm
+      // Throttling alarm - use the correct metric name
       const throttleAlarm = new cloudwatch.Alarm(this, `${table.tableName}ThrottleAlarm`, {
-        metric: table.metricThrottledRequestsForRead({
+        metric: table.metricThrottledRequests({
           period: Duration.minutes(5),
         }),
         threshold: 1,
@@ -166,7 +167,7 @@ export class MonitoringStack extends Stack {
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
         alarmDescription: `Throttling detected for ${table.tableName}`,
       });
-      throttleAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alarmTopic));
+      throttleAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
 
       // Add widgets
       dynamoWidgets.push(
@@ -177,8 +178,7 @@ export class MonitoringStack extends Stack {
             table.metricConsumedWriteCapacityUnits({ label: 'Write Capacity' }),
           ],
           right: [
-            table.metricThrottledRequestsForRead({ label: 'Read Throttles' }),
-            table.metricThrottledRequestsForWrite({ label: 'Write Throttles' }),
+            table.metricThrottledRequests({ label: 'Throttles' }),
           ],
           width: 12,
           height: 6,
@@ -209,7 +209,7 @@ export class MonitoringStack extends Stack {
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
         alarmDescription: `High 4XX error rate for ${api.restApiName}`,
       });
-      clientErrorAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alarmTopic));
+      clientErrorAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
 
       const serverErrorAlarm = new cloudwatch.Alarm(this, `${api.restApiName}5XXAlarm`, {
         metric: new cloudwatch.Metric({
@@ -226,7 +226,7 @@ export class MonitoringStack extends Stack {
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
         alarmDescription: `Server errors detected for ${api.restApiName}`,
       });
-      serverErrorAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alarmTopic));
+      serverErrorAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
 
       // Latency alarm
       const latencyAlarm = new cloudwatch.Alarm(this, `${api.restApiName}LatencyAlarm`, {
@@ -244,7 +244,7 @@ export class MonitoringStack extends Stack {
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
         alarmDescription: `High latency for ${api.restApiName}`,
       });
-      latencyAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alarmTopic));
+      latencyAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
 
       // Add widgets
       apiWidgets.push(

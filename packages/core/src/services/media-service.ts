@@ -28,11 +28,11 @@ export class MediaService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as any;
       throw new Error(`Upload request failed: ${error.error?.message || response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<UploadResponse>;
   }
 
   /**
@@ -84,11 +84,11 @@ export class MediaService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as any;
       throw new Error(`Download request failed: ${error.error?.message || response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<DownloadResponse>;
   }
 
   /**
@@ -96,7 +96,7 @@ export class MediaService {
    */
   async downloadFile(fileId: string, authToken: string): Promise<Blob> {
     const downloadResponse = await this.getDownloadUrl(fileId, authToken);
-    
+
     const response = await fetch(downloadResponse.downloadUrl);
     if (!response.ok) {
       throw new Error(`File download failed: ${response.statusText}`);
@@ -117,11 +117,11 @@ export class MediaService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as any;
       throw new Error(`Metadata request failed: ${error.error?.message || response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<MediaMetadata>;
   }
 
   /**
@@ -141,7 +141,7 @@ export class MediaService {
     if (options?.lastKey) params.append('lastKey', options.lastKey);
 
     const url = `${this.apiUrl}/media/metadata${params.toString() ? `?${params.toString()}` : ''}`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -150,11 +150,11 @@ export class MediaService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as any;
       throw new Error(`List files failed: ${error.error?.message || response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<MediaListResponse>;
   }
 
   /**
@@ -169,7 +169,7 @@ export class MediaService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as any;
       throw new Error(`Delete file failed: ${error.error?.message || response.statusText}`);
     }
   }
@@ -188,7 +188,7 @@ export class MediaService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as any;
       throw new Error(`Update file status failed: ${error.error?.message || response.statusText}`);
     }
   }
@@ -206,7 +206,7 @@ export class MediaService {
    */
   validateFile(file: File, category: 'documents' | 'images' | 'videos' | 'voice-notes'): { valid: boolean; error?: string } {
     const maxSize = 100 * 1024 * 1024; // 100MB
-    
+
     if (file.size > maxSize) {
       return { valid: false, error: 'File size exceeds 100MB limit' };
     }

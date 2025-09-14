@@ -20,11 +20,11 @@ export class NovaSonicServiceImpl implements NovaSonicService {
     this.sessionManagerFunctionName = sessionManagerFunctionName;
   }
 
-  async initializeSession(connectionId: string, userId: string): Promise<string> {
+  async initializeBidirectionalStream(connectionId: string, userId: string): Promise<string> {
     try {
       console.log(`Initializing Nova Sonic session for user: ${userId}, connection: ${connectionId}`);
 
-      const sessionId = `voice-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const sessionId = `voice-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
       // Initialize session through processor
       const command = new InvokeCommand({
@@ -44,7 +44,7 @@ export class NovaSonicServiceImpl implements NovaSonicService {
       });
 
       const response = await this.lambdaClient.send(command);
-      
+
       if (response.StatusCode !== 200) {
         throw new Error(`Failed to initialize session: ${response.StatusCode}`);
       }
@@ -84,7 +84,7 @@ export class NovaSonicServiceImpl implements NovaSonicService {
       });
 
       const response = await this.lambdaClient.send(command);
-      
+
       if (response.StatusCode !== 200) {
         throw new Error(`Failed to process audio: ${response.StatusCode}`);
       }
@@ -97,10 +97,13 @@ export class NovaSonicServiceImpl implements NovaSonicService {
 
       // Return voice response (in real implementation, this would come from the Lambda response)
       return {
+        type: 'voice_response',
+        sessionId,
         text: 'Processed audio response', // This would be the actual transcription/response
         audio: 'base64-encoded-audio-response', // This would be the actual audio response
-        sessionId,
-        metadata: {
+        timestamp: new Date().toISOString(),
+        status: 'completed',
+        data: {
           processingTime: Date.now(),
           model: 'claude-3-haiku',
           language: 'en-US',
@@ -133,7 +136,7 @@ export class NovaSonicServiceImpl implements NovaSonicService {
       });
 
       const response = await this.lambdaClient.send(command);
-      
+
       if (response.StatusCode !== 200) {
         throw new Error(`Failed to end session: ${response.StatusCode}`);
       }
@@ -166,7 +169,7 @@ export class NovaSonicServiceImpl implements NovaSonicService {
       });
 
       const lambdaResponse = await this.lambdaClient.send(command);
-      
+
       if (lambdaResponse.StatusCode !== 200) {
         throw new Error(`Failed to send voice response: ${lambdaResponse.StatusCode}`);
       }
@@ -203,7 +206,7 @@ export class NovaSonicServiceImpl implements NovaSonicService {
       });
 
       const response = await this.lambdaClient.send(command);
-      
+
       if (response.StatusCode !== 200) {
         throw new Error(`Failed to transcribe audio: ${response.StatusCode}`);
       }
@@ -240,7 +243,7 @@ export class NovaSonicServiceImpl implements NovaSonicService {
       });
 
       const response = await this.lambdaClient.send(command);
-      
+
       if (response.StatusCode !== 200) {
         throw new Error(`Failed to synthesize voice: ${response.StatusCode}`);
       }
@@ -266,7 +269,7 @@ export class NovaSonicServiceImpl implements NovaSonicService {
       });
 
       const response = await this.lambdaClient.send(command);
-      
+
       if (response.StatusCode !== 200) {
         throw new Error(`Failed to list sessions: ${response.StatusCode}`);
       }
@@ -295,7 +298,7 @@ export class NovaSonicServiceImpl implements NovaSonicService {
       });
 
       const response = await this.lambdaClient.send(command);
-      
+
       if (response.StatusCode !== 200) {
         return null;
       }
@@ -310,5 +313,85 @@ export class NovaSonicServiceImpl implements NovaSonicService {
       console.error('Error getting session info:', error);
       return null;
     }
+  }
+
+  // Interface methods implementation
+  async invokeModelWithBidirectionalStream(modelId: string, body: any): Promise<any> {
+    try {
+      const command = new InvokeCommand({
+        FunctionName: this.processorFunctionName,
+        Payload: JSON.stringify({
+          modelId,
+          body,
+          messageType: 'model_invoke',
+        }),
+      });
+
+      const response = await this.lambdaClient.send(command);
+
+      if (response.StatusCode !== 200) {
+        throw new Error(`Failed to invoke model: ${response.StatusCode}`);
+      }
+
+      if (response.Payload) {
+        return JSON.parse(new TextDecoder().decode(response.Payload));
+      }
+
+      return {};
+    } catch (error) {
+      console.error('Error invoking model:', error);
+      throw error;
+    }
+  }
+
+  generateOrderedStream(initialRequest?: any): any {
+    // Return a stream-like object for ordered processing
+    return {
+      sessionId: `stream-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+      initialRequest,
+      status: 'initialized',
+    };
+  }
+
+  async processAudioStream(audioChunk: Buffer, streamId: string): Promise<void> {
+    try {
+      const audioData = audioChunk.toString('base64');
+      await this.processAudioData(audioData, streamId);
+    } catch (error) {
+      console.error('Error processing audio stream:', error);
+      throw error;
+    }
+  }
+
+  async handleStreamResponse(response: any, connectionId: string): Promise<void> {
+    try {
+      const command = new InvokeCommand({
+        FunctionName: this.processorFunctionName,
+        Payload: JSON.stringify({
+          connectionId,
+          messageType: 'stream_response',
+          response,
+        }),
+      });
+
+      await this.lambdaClient.send(command);
+    } catch (error) {
+      console.error('Error handling stream response:', error);
+      throw error;
+    }
+  }
+
+  async closeBidirectionalStream(streamId: string): Promise<void> {
+    try {
+      await this.endSession(streamId);
+    } catch (error) {
+      console.error('Error closing bidirectional stream:', error);
+      throw error;
+    }
+  }
+
+  // Legacy methods for backward compatibility
+  async initializeSession(connectionId: string, userId: string): Promise<string> {
+    return this.initializeBidirectionalStream(connectionId, userId);
   }
 }

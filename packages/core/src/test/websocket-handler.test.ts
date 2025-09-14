@@ -38,7 +38,7 @@ vi.mock('@aws-sdk/client-apigatewaymanagementapi', () => ({
 const createMockHandler = () => {
   return async (event: APIGatewayProxyWebsocketEventV2): Promise<APIGatewayProxyResultV2> => {
     const { routeKey, connectionId } = event.requestContext;
-    
+
     try {
       switch (routeKey) {
         case '$connect':
@@ -46,143 +46,143 @@ const createMockHandler = () => {
             TableName: process.env.CONNECTIONS_TABLE_NAME,
             Item: {
               connectionId,
-              userId: event.queryStringParameters?.userId || 'anonymous',
-              sessionId: event.queryStringParameters?.sessionId,
+              userId: (event as any).queryStringParameters?.userId || 'anonymous',
+              sessionId: (event as any).queryStringParameters?.sessionId,
               status: 'CONNECTED',
-              ipAddress: event.requestContext.identity?.sourceIp,
-              userAgent: event.headers?.['User-Agent'] || event.headers?.['user-agent'],
+              ipAddress: (event.requestContext as any).identity?.sourceIp,
+              userAgent: (event as any).headers?.['User-Agent'] || (event as any).headers?.['user-agent'],
               createdAt: new Date().toISOString(),
               lastActivity: new Date().toISOString(),
             },
           });
           return { statusCode: 200, body: 'Connected' };
-        
-      case '$disconnect':
-        const getResult = await mockDynamoClient.send({
-          TableName: process.env.CONNECTIONS_TABLE_NAME,
-          Key: { connectionId },
-        });
-        
-        if (getResult.Item) {
+
+        case '$disconnect':
+          const getResult = await mockDynamoClient.send({
+            TableName: process.env.CONNECTIONS_TABLE_NAME,
+            Key: { connectionId },
+          });
+
+          if (getResult.Item) {
+            await mockDynamoClient.send({
+              TableName: process.env.CONNECTIONS_TABLE_NAME,
+              Key: { connectionId },
+              UpdateExpression: 'SET #status = :status, disconnectedAt = :disconnectedAt',
+              ExpressionAttributeNames: { '#status': 'status' },
+              ExpressionAttributeValues: {
+                ':status': 'DISCONNECTED',
+                ':disconnectedAt': new Date().toISOString(),
+              },
+            });
+          }
+          return { statusCode: 200, body: 'Disconnected' };
+
+        case '$default':
+          const message = event.body ? JSON.parse(event.body) : {};
+
+          // Update last activity
           await mockDynamoClient.send({
             TableName: process.env.CONNECTIONS_TABLE_NAME,
             Key: { connectionId },
-            UpdateExpression: 'SET #status = :status, disconnectedAt = :disconnectedAt',
-            ExpressionAttributeNames: { '#status': 'status' },
+            UpdateExpression: 'SET lastActivity = :lastActivity',
             ExpressionAttributeValues: {
-              ':status': 'DISCONNECTED',
-              ':disconnectedAt': new Date().toISOString(),
+              ':lastActivity': new Date().toISOString(),
             },
           });
-        }
-        return { statusCode: 200, body: 'Disconnected' };
-        
-      case '$default':
-        const message = event.body ? JSON.parse(event.body) : {};
-        
-        // Update last activity
-        await mockDynamoClient.send({
-          TableName: process.env.CONNECTIONS_TABLE_NAME,
-          Key: { connectionId },
-          UpdateExpression: 'SET lastActivity = :lastActivity',
-          ExpressionAttributeValues: {
-            ':lastActivity': new Date().toISOString(),
-          },
-        });
-        
-        // Get connection info
-        await mockDynamoClient.send({
-          TableName: process.env.CONNECTIONS_TABLE_NAME,
-          Key: { connectionId },
-        });
-        
-        switch (message.type) {
-          case 'voice_start':
-            await mockApiGatewayClient.send({
-              ConnectionId: connectionId,
-              Data: JSON.stringify({
-                type: 'voice_session_started',
-                data: {
-                  sessionId: message.data?.sessionId || `voice-${Date.now()}-${connectionId}`,
-                  audioFormat: message.data?.audioFormat || 'webm',
-                  status: 'ACTIVE',
-                },
-                timestamp: new Date().toISOString(),
-              }),
-            });
-            return { statusCode: 200, body: 'Voice session started' };
-            
-          case 'voice_data':
-            await mockApiGatewayClient.send({
-              ConnectionId: connectionId,
-              Data: JSON.stringify({
-                type: 'voice_data_received',
-                data: {
-                  sessionId: message.data.sessionId,
+
+          // Get connection info
+          await mockDynamoClient.send({
+            TableName: process.env.CONNECTIONS_TABLE_NAME,
+            Key: { connectionId },
+          });
+
+          switch (message.type) {
+            case 'voice_start':
+              await mockApiGatewayClient.send({
+                ConnectionId: connectionId,
+                Data: JSON.stringify({
+                  type: 'voice_session_started',
+                  data: {
+                    sessionId: message.data?.sessionId || `voice-${Date.now()}-${connectionId}`,
+                    audioFormat: message.data?.audioFormat || 'webm',
+                    status: 'ACTIVE',
+                  },
                   timestamp: new Date().toISOString(),
-                },
-                timestamp: new Date().toISOString(),
-              }),
-            });
-            return { statusCode: 200, body: 'Voice data processed' };
-            
-          case 'voice_end':
-            await mockApiGatewayClient.send({
-              ConnectionId: connectionId,
-              Data: JSON.stringify({
-                type: 'voice_session_ended',
-                data: {
-                  sessionId: message.data.sessionId,
-                  status: 'COMPLETED',
-                },
-                timestamp: new Date().toISOString(),
-              }),
-            });
-            return { statusCode: 200, body: 'Voice session ended' };
-            
-          case 'text_message':
-            await mockApiGatewayClient.send({
-              ConnectionId: connectionId,
-              Data: JSON.stringify({
-                type: 'text_message_received',
-                data: {
-                  content: message.data.content,
-                  sessionId: message.data.sessionId,
-                  messageId: `msg-${Date.now()}`,
-                },
-                timestamp: new Date().toISOString(),
-              }),
-            });
-            return { statusCode: 200, body: 'Text message processed' };
-            
-          case 'ping':
-            await mockApiGatewayClient.send({
-              ConnectionId: connectionId,
-              Data: JSON.stringify({
-                type: 'pong',
-                timestamp: new Date().toISOString(),
-              }),
-            });
-            return { statusCode: 200, body: 'Pong sent' };
-            
-          default:
-            await mockApiGatewayClient.send({
-              ConnectionId: connectionId,
-              Data: JSON.stringify({
-                type: 'error',
-                data: { message: `Unknown message type: ${message.type}` },
-                timestamp: new Date().toISOString(),
-              }),
-            });
-            return { statusCode: 400, body: 'Unknown message type' };
-        }
-        
-      default:
-        return { statusCode: 400, body: 'Unknown route' };
-    }
+                }),
+              });
+              return { statusCode: 200, body: 'Voice session started' };
+
+            case 'voice_data':
+              await mockApiGatewayClient.send({
+                ConnectionId: connectionId,
+                Data: JSON.stringify({
+                  type: 'voice_data_received',
+                  data: {
+                    sessionId: message.data.sessionId,
+                    timestamp: new Date().toISOString(),
+                  },
+                  timestamp: new Date().toISOString(),
+                }),
+              });
+              return { statusCode: 200, body: 'Voice data processed' };
+
+            case 'voice_end':
+              await mockApiGatewayClient.send({
+                ConnectionId: connectionId,
+                Data: JSON.stringify({
+                  type: 'voice_session_ended',
+                  data: {
+                    sessionId: message.data.sessionId,
+                    status: 'COMPLETED',
+                  },
+                  timestamp: new Date().toISOString(),
+                }),
+              });
+              return { statusCode: 200, body: 'Voice session ended' };
+
+            case 'text_message':
+              await mockApiGatewayClient.send({
+                ConnectionId: connectionId,
+                Data: JSON.stringify({
+                  type: 'text_message_received',
+                  data: {
+                    content: message.data.content,
+                    sessionId: message.data.sessionId,
+                    messageId: `msg-${Date.now()}`,
+                  },
+                  timestamp: new Date().toISOString(),
+                }),
+              });
+              return { statusCode: 200, body: 'Text message processed' };
+
+            case 'ping':
+              await mockApiGatewayClient.send({
+                ConnectionId: connectionId,
+                Data: JSON.stringify({
+                  type: 'pong',
+                  timestamp: new Date().toISOString(),
+                }),
+              });
+              return { statusCode: 200, body: 'Pong sent' };
+
+            default:
+              await mockApiGatewayClient.send({
+                ConnectionId: connectionId,
+                Data: JSON.stringify({
+                  type: 'error',
+                  data: { message: `Unknown message type: ${message.type}` },
+                  timestamp: new Date().toISOString(),
+                }),
+              });
+              return { statusCode: 400, body: 'Unknown message type' };
+          }
+
+        default:
+          return { statusCode: 400, body: 'Unknown route' };
+      }
     } catch (error) {
       console.error('Error handling WebSocket event:', error);
-      
+
       // Try to send error message back to client
       try {
         await mockApiGatewayClient.send({
@@ -196,11 +196,11 @@ const createMockHandler = () => {
       } catch (sendError) {
         console.error('Failed to send error message to client:', sendError);
       }
-      
+
       if (routeKey === '$connect') {
         return { statusCode: 500, body: 'Connection failed' };
       }
-      
+
       return { statusCode: 500, body: 'Internal server error' };
     }
   };
@@ -208,15 +208,15 @@ const createMockHandler = () => {
 
 describe('WebSocket Handler', () => {
   let handler: ReturnType<typeof createMockHandler>;
-  
+
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Set environment variables
     process.env.CONNECTIONS_TABLE_NAME = 'test-connections-table';
     process.env.USER_POOL_ID = 'test-user-pool';
     process.env.IDENTITY_POOL_ID = 'test-identity-pool';
-    
+
     // Create mock handler
     handler = createMockHandler();
   });
@@ -246,8 +246,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(200);
-      expect(result.body).toBe('Connected');
+      expect((result as any).statusCode).toBe(200);
+      expect((result as any).body).toBe('Connected');
       expect(mockDynamoClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
           TableName: 'test-connections-table',
@@ -285,8 +285,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(200);
-      expect(result.body).toBe('Disconnected');
+      expect((result as any).statusCode).toBe(200);
+      expect((result as any).body).toBe('Disconnected');
       expect(mockDynamoClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
           TableName: 'test-connections-table',
@@ -317,8 +317,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(200);
-      expect(result.body).toBe('Disconnected');
+      expect((result as any).statusCode).toBe(200);
+      expect((result as any).body).toBe('Disconnected');
     });
   });
 
@@ -357,8 +357,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(200);
-      expect(result.body).toBe('Voice session started');
+      expect((result as any).statusCode).toBe(200);
+      expect((result as any).body).toBe('Voice session started');
       expect(mockApiGatewayClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
           ConnectionId: 'test-connection-id',
@@ -388,8 +388,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(200);
-      expect(result.body).toBe('Voice data processed');
+      expect((result as any).statusCode).toBe(200);
+      expect((result as any).body).toBe('Voice data processed');
       expect(mockApiGatewayClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
           ConnectionId: 'test-connection-id',
@@ -418,8 +418,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(200);
-      expect(result.body).toBe('Voice session ended');
+      expect((result as any).statusCode).toBe(200);
+      expect((result as any).body).toBe('Voice session ended');
       expect(mockApiGatewayClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
           ConnectionId: 'test-connection-id',
@@ -449,8 +449,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(200);
-      expect(result.body).toBe('Text message processed');
+      expect((result as any).statusCode).toBe(200);
+      expect((result as any).body).toBe('Text message processed');
       expect(mockApiGatewayClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
           ConnectionId: 'test-connection-id',
@@ -476,8 +476,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(200);
-      expect(result.body).toBe('Pong sent');
+      expect((result as any).statusCode).toBe(200);
+      expect((result as any).body).toBe('Pong sent');
       expect(mockApiGatewayClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
           ConnectionId: 'test-connection-id',
@@ -503,8 +503,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(400);
-      expect(result.body).toBe('Unknown message type');
+      expect((result as any).statusCode).toBe(400);
+      expect((result as any).body).toBe('Unknown message type');
       expect(mockApiGatewayClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
           ConnectionId: 'test-connection-id',
@@ -532,8 +532,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(500);
-      expect(result.body).toBe('Connection failed');
+      expect((result as any).statusCode).toBe(500);
+      expect((result as any).body).toBe('Connection failed');
     });
 
     it('should handle API Gateway errors gracefully', async () => {
@@ -563,8 +563,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(500);
-      expect(result.body).toBe('Internal server error');
+      expect((result as any).statusCode).toBe(500);
+      expect((result as any).body).toBe('Internal server error');
     });
 
     it('should handle stale connections (GoneException)', async () => {
@@ -597,9 +597,9 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(500);
-      expect(result.body).toBe('Internal server error');
-      
+      expect((result as any).statusCode).toBe(500);
+      expect((result as any).body).toBe('Internal server error');
+
       // Should attempt to delete stale connection
       expect(mockDynamoClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -629,7 +629,7 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(connectEvent);
 
-      expect(result.statusCode).toBe(200);
+      expect((result as any).statusCode).toBe(200);
       expect(mockDynamoClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
           TableName: 'test-connections-table',
@@ -673,8 +673,8 @@ describe('WebSocket Handler', () => {
 
       const result = await handler(voiceEvent);
 
-      expect(result.statusCode).toBe(200);
-      expect(result.body).toBe('Voice session started');
+      expect((result as any).statusCode).toBe(200);
+      expect((result as any).body).toBe('Voice session started');
       expect(mockApiGatewayClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
           ConnectionId: 'test-connection-id',

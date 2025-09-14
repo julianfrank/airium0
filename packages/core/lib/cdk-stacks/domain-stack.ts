@@ -1,6 +1,7 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { Stack, StackProps, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
@@ -44,7 +45,7 @@ export class DomainStack extends Stack {
         this,
         'Certificate',
         props.certificateArn
-      );
+      ) as certificatemanager.Certificate;
     } else {
       this.certificate = new certificatemanager.Certificate(this, 'Certificate', {
         domainName: props.domainName,
@@ -73,9 +74,8 @@ export class DomainStack extends Stack {
     }
 
     // Create Origin Access Control for S3
-    const oac = new cloudfront.OriginAccessControl(this, 'OAC', {
+    const oac = new cloudfront.S3OriginAccessControl(this, 'OAC', {
       description: `OAC for ${props.domainName}`,
-      originAccessControlOriginType: cloudfront.OriginAccessControlOriginType.S3,
       signing: cloudfront.Signing.SIGV4_ALWAYS,
     });
 
@@ -132,7 +132,7 @@ export class DomainStack extends Stack {
         zone: this.hostedZone,
         recordName: props.domainName,
         target: route53.RecordTarget.fromAlias(
-          new route53.targets.CloudFrontTarget(distribution)
+          new route53targets.CloudFrontTarget(distribution)
         ),
       });
 
@@ -141,7 +141,7 @@ export class DomainStack extends Stack {
         zone: this.hostedZone,
         recordName: props.domainName,
         target: route53.RecordTarget.fromAlias(
-          new route53.targets.CloudFrontTarget(distribution)
+          new route53targets.CloudFrontTarget(distribution)
         ),
       });
     }

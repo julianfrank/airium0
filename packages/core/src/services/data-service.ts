@@ -39,10 +39,10 @@ export class DataService {
   async createUser(request: CreateUserRequest): Promise<User> {
     try {
       const result = await this.client.models.User.create({
-        email: request.email,
-        profile: request.profile || 'GENERAL',
+        email: [request.email],
+        profile: [request.profile || 'GENERAL'],
         groups: request.groups || ['GENERAL'],
-        preferences: request.preferences || {},
+        preferences: [JSON.stringify(request.preferences || {})],
       });
 
       if (!result.data) {
@@ -59,7 +59,7 @@ export class DataService {
   async getUserById(userId: string): Promise<User> {
     try {
       const result = await this.client.models.User.get({ id: userId });
-      
+
       if (!result.data) {
         throw new DataError(DataErrorType.NOT_FOUND, `User with ID ${userId} not found`);
       }
@@ -92,8 +92,8 @@ export class DataService {
     try {
       const result = await this.client.models.User.update({
         id: userId,
-        lastLoginAt: new Date().toISOString(),
-      });
+        lastLoginAt: [new Date().toISOString()],
+      } as any);
 
       if (!result.data) {
         throw new DataError(DataErrorType.NOT_FOUND, `User with ID ${userId} not found`);
@@ -110,11 +110,11 @@ export class DataService {
   async createGroup(request: CreateGroupRequest): Promise<Group> {
     try {
       const result = await this.client.models.Group.create({
-        name: request.name,
-        description: request.description,
+        name: [request.name],
+        description: [request.description],
         applications: request.applications || [],
-        memberCount: 0,
-        isDefault: request.isDefault || false,
+        memberCount: ['0'],
+        isDefault: [request.isDefault ? 'true' : 'false'],
       });
 
       if (!result.data) {
@@ -142,14 +142,14 @@ export class DataService {
   async createApplication(request: CreateApplicationRequest): Promise<Application> {
     try {
       const result = await this.client.models.Application.create({
-        type: request.type,
-        name: request.name,
-        description: request.description,
-        config: request.config,
-        remarks: request.remarks,
+        type: [request.type],
+        name: [request.name],
+        description: [request.description],
+        config: [JSON.stringify(request.config)],
+        remarks: [request.remarks],
         groups: request.groups || [],
-        isActive: true,
-        version: request.version || '1.0.0',
+        isActive: ['true'],
+        version: [request.version || '1.0.0'],
       });
 
       if (!result.data) {
@@ -166,9 +166,9 @@ export class DataService {
   async getApplicationsByGroups(groups: string[]): Promise<Application[]> {
     try {
       const result = await this.client.models.Application.list();
-      
+
       // Filter applications that have at least one matching group
-      const filteredApps = result.data.filter(app => 
+      const filteredApps = result.data.filter(app =>
         app.groups && app.groups.some(group => groups.includes(group))
       );
 
@@ -193,13 +193,13 @@ export class DataService {
   async createChatSession(request: CreateChatSessionRequest): Promise<ChatSession> {
     try {
       const result = await this.client.models.ChatSession.create({
-        userId: request.userId,
-        connectionId: request.connectionId,
-        title: request.title,
-        messageCount: 0,
-        context: request.context || {},
-        metadata: request.metadata || {},
-        isActive: true,
+        userId: [request.userId],
+        connectionId: [request.connectionId],
+        title: [request.title],
+        messageCount: ['0'],
+        context: [JSON.stringify(request.context || {})],
+        metadata: [JSON.stringify(request.metadata || {})],
+        isActive: ['true'],
       });
 
       if (!result.data) {
@@ -230,15 +230,15 @@ export class DataService {
   async createChatMessage(request: CreateChatMessageRequest): Promise<ChatMessage> {
     try {
       const result = await this.client.models.ChatMessage.create({
-        sessionId: request.sessionId,
-        userId: request.userId,
-        type: request.type,
-        content: request.content,
-        metadata: request.metadata || {},
-        voiceSessionId: request.voiceSessionId,
+        sessionId: [request.sessionId],
+        userId: [request.userId],
+        type: [request.type],
+        content: [request.content],
+        metadata: [JSON.stringify(request.metadata || {})],
+        voiceSessionId: request.voiceSessionId ? [request.voiceSessionId] : undefined,
         mediaUrls: request.mediaUrls || [],
-        aiResponse: request.aiResponse,
-        timestamp: new Date().toISOString(),
+        aiResponse: request.aiResponse ? [JSON.stringify(request.aiResponse)] : undefined,
+        timestamp: [new Date().toISOString()],
       });
 
       if (!result.data) {
@@ -277,8 +277,8 @@ export class DataService {
       if (session.data) {
         await this.client.models.ChatSession.update({
           id: sessionId,
-          messageCount: (session.data.messageCount || 0) + 1,
-        });
+          messageCount: [String((session.data.messageCount || 0) + 1)],
+        } as any);
       }
     } catch (error) {
       // Log error but don't fail the main operation
@@ -290,13 +290,13 @@ export class DataService {
   async createVoiceSession(request: CreateVoiceSessionRequest): Promise<VoiceSession> {
     try {
       const result = await this.client.models.VoiceSession.create({
-        connectionId: request.connectionId,
-        userId: request.userId,
-        chatSessionId: request.chatSessionId,
-        novaSonicSessionId: request.novaSonicSessionId,
-        status: 'ACTIVE',
-        audioFormat: request.audioFormat || 'webm',
-        duration: 0,
+        connectionId: [request.connectionId],
+        userId: [request.userId],
+        chatSessionId: [request.chatSessionId],
+        novaSonicSessionId: [request.novaSonicSessionId],
+        status: ['ACTIVE'],
+        audioFormat: [request.audioFormat || 'webm'],
+        duration: ['0'],
       });
 
       if (!result.data) {
@@ -314,17 +314,17 @@ export class DataService {
   async createMediaFile(request: CreateMediaFileRequest): Promise<MediaFile> {
     try {
       const result = await this.client.models.MediaFile.create({
-        userId: request.userId,
-        fileName: request.fileName,
-        fileType: request.fileType,
-        fileSize: request.fileSize,
-        mimeType: request.mimeType,
-        s3Key: request.s3Key,
-        s3Bucket: request.s3Bucket,
-        uploadStatus: 'UPLOADING',
-        isPublic: request.isPublic || false,
+        userId: [request.userId],
+        fileName: [request.fileName],
+        fileType: [request.fileType],
+        fileSize: [String(request.fileSize)],
+        mimeType: [request.mimeType],
+        s3Key: [request.s3Key],
+        s3Bucket: [request.s3Bucket],
+        uploadStatus: ['UPLOADING'],
+        isPublic: [request.isPublic ? 'true' : 'false'],
         tags: request.tags || [],
-        metadata: request.metadata || {},
+        metadata: [JSON.stringify(request.metadata || {})],
       });
 
       if (!result.data) {
@@ -355,13 +355,13 @@ export class DataService {
   async createUserMemory(request: CreateUserMemoryRequest): Promise<UserMemory> {
     try {
       const result = await this.client.models.UserMemory.create({
-        userId: request.userId,
-        type: request.type,
-        content: request.content,
-        embedding: request.embedding,
-        relevanceScore: request.relevanceScore,
-        expiresAt: request.expiresAt,
-        isActive: true,
+        userId: [request.userId],
+        type: [request.type],
+        content: [JSON.stringify(request.content)],
+        embedding: request.embedding ? [JSON.stringify(request.embedding)] : undefined,
+        relevanceScore: [String(request.relevanceScore)],
+        expiresAt: request.expiresAt ? [request.expiresAt] : undefined,
+        isActive: ['true'],
       });
 
       if (!result.data) {
@@ -392,14 +392,14 @@ export class DataService {
   async createNotification(request: CreateNotificationRequest): Promise<Notification> {
     try {
       const result = await this.client.models.Notification.create({
-        userId: request.userId,
-        type: request.type,
-        title: request.title,
-        message: request.message,
-        data: request.data || {},
-        isRead: false,
-        isPersistent: request.isPersistent || false,
-        expiresAt: request.expiresAt,
+        userId: [request.userId],
+        type: [request.type],
+        title: [request.title],
+        message: [request.message],
+        data: [JSON.stringify(request.data || {})],
+        isRead: ['false'],
+        isPersistent: [request.isPersistent ? 'true' : 'false'],
+        expiresAt: request.expiresAt ? [request.expiresAt] : undefined,
       });
 
       if (!result.data) {
@@ -417,10 +417,10 @@ export class DataService {
   async createConnection(userId: string, sessionId?: string): Promise<Connection> {
     try {
       const result = await this.client.models.Connection.create({
-        userId,
-        sessionId,
-        status: 'CONNECTED',
-        lastActivity: new Date().toISOString(),
+        userId: [userId],
+        sessionId: sessionId ? [sessionId] : undefined,
+        status: ['CONNECTED'],
+        lastActivity: [new Date().toISOString()],
       });
 
       if (!result.data) {
@@ -438,11 +438,11 @@ export class DataService {
   private mapUserFromSchema(user: any): User {
     return {
       userId: user.id,
-      email: user.email,
-      profile: user.profile,
+      email: Array.isArray(user.email) ? user.email[0] : user.email,
+      profile: Array.isArray(user.profile) ? user.profile[0] : user.profile,
       groups: user.groups || [],
-      preferences: user.preferences || {},
-      lastLoginAt: user.lastLoginAt,
+      preferences: Array.isArray(user.preferences) ? JSON.parse(user.preferences[0] || '{}') : user.preferences || {},
+      lastLoginAt: Array.isArray(user.lastLoginAt) ? user.lastLoginAt[0] : user.lastLoginAt,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
@@ -451,11 +451,11 @@ export class DataService {
   private mapGroupFromSchema(group: any): Group {
     return {
       groupId: group.id,
-      name: group.name,
-      description: group.description,
+      name: Array.isArray(group.name) ? group.name[0] : group.name,
+      description: Array.isArray(group.description) ? group.description[0] : group.description,
       applications: group.applications || [],
-      memberCount: group.memberCount || 0,
-      isDefault: group.isDefault || false,
+      memberCount: Array.isArray(group.memberCount) ? parseInt(group.memberCount[0]) : group.memberCount || 0,
+      isDefault: Array.isArray(group.isDefault) ? group.isDefault[0] === 'true' : group.isDefault || false,
       createdAt: group.createdAt,
       updatedAt: group.updatedAt,
     };
@@ -464,14 +464,14 @@ export class DataService {
   private mapApplicationFromSchema(app: any): Application {
     return {
       appId: app.id,
-      type: app.type,
-      name: app.name,
-      description: app.description,
-      config: app.config || {},
-      remarks: app.remarks,
+      type: Array.isArray(app.type) ? app.type[0] : app.type,
+      name: Array.isArray(app.name) ? app.name[0] : app.name,
+      description: Array.isArray(app.description) ? app.description[0] : app.description,
+      config: Array.isArray(app.config) ? JSON.parse(app.config[0] || '{}') : app.config || {},
+      remarks: Array.isArray(app.remarks) ? app.remarks[0] : app.remarks,
       groups: app.groups || [],
-      isActive: app.isActive || false,
-      version: app.version || '1.0.0',
+      isActive: Array.isArray(app.isActive) ? app.isActive[0] === 'true' : app.isActive || false,
+      version: Array.isArray(app.version) ? app.version[0] : app.version || '1.0.0',
       createdAt: app.createdAt,
       updatedAt: app.updatedAt,
     };
@@ -480,13 +480,13 @@ export class DataService {
   private mapChatSessionFromSchema(session: any): ChatSession {
     return {
       sessionId: session.id,
-      userId: session.userId,
-      connectionId: session.connectionId,
-      title: session.title,
-      messageCount: session.messageCount || 0,
-      context: session.context || {},
-      metadata: session.metadata || {},
-      isActive: session.isActive || false,
+      userId: Array.isArray(session.userId) ? session.userId[0] : session.userId,
+      connectionId: Array.isArray(session.connectionId) ? session.connectionId[0] : session.connectionId,
+      title: Array.isArray(session.title) ? session.title[0] : session.title,
+      messageCount: Array.isArray(session.messageCount) ? parseInt(session.messageCount[0]) : session.messageCount || 0,
+      context: Array.isArray(session.context) ? JSON.parse(session.context[0] || '{}') : session.context || {},
+      metadata: Array.isArray(session.metadata) ? JSON.parse(session.metadata[0] || '{}') : session.metadata || {},
+      isActive: Array.isArray(session.isActive) ? session.isActive[0] === 'true' : session.isActive || false,
       createdAt: session.createdAt,
       updatedAt: session.updatedAt,
     };
@@ -495,15 +495,15 @@ export class DataService {
   private mapChatMessageFromSchema(message: any): ChatMessage {
     return {
       messageId: message.id,
-      sessionId: message.sessionId,
-      userId: message.userId,
-      type: message.type,
-      content: message.content,
-      metadata: message.metadata || {},
-      voiceSessionId: message.voiceSessionId,
+      sessionId: Array.isArray(message.sessionId) ? message.sessionId[0] : message.sessionId,
+      userId: Array.isArray(message.userId) ? message.userId[0] : message.userId,
+      type: Array.isArray(message.type) ? message.type[0] : message.type,
+      content: Array.isArray(message.content) ? message.content[0] : message.content,
+      metadata: Array.isArray(message.metadata) ? JSON.parse(message.metadata[0] || '{}') : message.metadata || {},
+      voiceSessionId: Array.isArray(message.voiceSessionId) ? message.voiceSessionId[0] : message.voiceSessionId,
       mediaUrls: message.mediaUrls || [],
-      aiResponse: message.aiResponse,
-      timestamp: message.timestamp,
+      aiResponse: Array.isArray(message.aiResponse) ? JSON.parse(message.aiResponse[0] || 'null') : message.aiResponse,
+      timestamp: Array.isArray(message.timestamp) ? message.timestamp[0] : message.timestamp,
       editedAt: message.editedAt,
     };
   }
@@ -511,13 +511,13 @@ export class DataService {
   private mapVoiceSessionFromSchema(session: any): VoiceSession {
     return {
       sessionId: session.id,
-      novaSonicSessionId: session.novaSonicSessionId,
-      connectionId: session.connectionId,
-      userId: session.userId,
-      chatSessionId: session.chatSessionId,
-      status: session.status,
-      audioFormat: session.audioFormat,
-      duration: session.duration || 0,
+      novaSonicSessionId: Array.isArray(session.novaSonicSessionId) ? session.novaSonicSessionId[0] : session.novaSonicSessionId,
+      connectionId: Array.isArray(session.connectionId) ? session.connectionId[0] : session.connectionId,
+      userId: Array.isArray(session.userId) ? session.userId[0] : session.userId,
+      chatSessionId: Array.isArray(session.chatSessionId) ? session.chatSessionId[0] : session.chatSessionId,
+      status: Array.isArray(session.status) ? session.status[0] : session.status,
+      audioFormat: Array.isArray(session.audioFormat) ? session.audioFormat[0] : session.audioFormat,
+      duration: Array.isArray(session.duration) ? parseInt(session.duration[0]) : session.duration || 0,
       transcription: session.transcription,
       aiResponse: session.aiResponse,
       createdAt: session.createdAt,
@@ -528,17 +528,17 @@ export class DataService {
   private mapMediaFileFromSchema(file: any): MediaFile {
     return {
       fileId: file.id,
-      userId: file.userId,
-      fileName: file.fileName,
-      fileType: file.fileType,
-      fileSize: file.fileSize,
-      mimeType: file.mimeType,
-      s3Key: file.s3Key,
-      s3Bucket: file.s3Bucket,
-      uploadStatus: file.uploadStatus,
-      isPublic: file.isPublic || false,
+      userId: Array.isArray(file.userId) ? file.userId[0] : file.userId,
+      fileName: Array.isArray(file.fileName) ? file.fileName[0] : file.fileName,
+      fileType: Array.isArray(file.fileType) ? file.fileType[0] : file.fileType,
+      fileSize: Array.isArray(file.fileSize) ? parseInt(file.fileSize[0]) : file.fileSize,
+      mimeType: Array.isArray(file.mimeType) ? file.mimeType[0] : file.mimeType,
+      s3Key: Array.isArray(file.s3Key) ? file.s3Key[0] : file.s3Key,
+      s3Bucket: Array.isArray(file.s3Bucket) ? file.s3Bucket[0] : file.s3Bucket,
+      uploadStatus: Array.isArray(file.uploadStatus) ? file.uploadStatus[0] : file.uploadStatus,
+      isPublic: Array.isArray(file.isPublic) ? file.isPublic[0] === 'true' : file.isPublic || false,
       tags: file.tags || [],
-      metadata: file.metadata || {},
+      metadata: Array.isArray(file.metadata) ? JSON.parse(file.metadata[0] || '{}') : file.metadata || {},
       createdAt: file.createdAt,
       updatedAt: file.updatedAt,
     };
@@ -547,13 +547,13 @@ export class DataService {
   private mapUserMemoryFromSchema(memory: any): UserMemory {
     return {
       memoryId: memory.id,
-      userId: memory.userId,
-      type: memory.type,
-      content: memory.content || {},
+      userId: Array.isArray(memory.userId) ? memory.userId[0] : memory.userId,
+      type: Array.isArray(memory.type) ? memory.type[0] : memory.type,
+      content: Array.isArray(memory.content) ? JSON.parse(memory.content[0] || '{}') : memory.content || {},
       embedding: memory.embedding,
-      relevanceScore: memory.relevanceScore,
-      expiresAt: memory.expiresAt,
-      isActive: memory.isActive || false,
+      relevanceScore: Array.isArray(memory.relevanceScore) ? parseFloat(memory.relevanceScore[0]) : memory.relevanceScore,
+      expiresAt: Array.isArray(memory.expiresAt) ? memory.expiresAt[0] : memory.expiresAt,
+      isActive: Array.isArray(memory.isActive) ? memory.isActive[0] === 'true' : memory.isActive || false,
       createdAt: memory.createdAt,
       updatedAt: memory.updatedAt,
     };
@@ -562,14 +562,14 @@ export class DataService {
   private mapNotificationFromSchema(notification: any): Notification {
     return {
       notificationId: notification.id,
-      userId: notification.userId,
-      type: notification.type,
-      title: notification.title,
-      message: notification.message,
-      data: notification.data || {},
-      isRead: notification.isRead || false,
-      isPersistent: notification.isPersistent || false,
-      expiresAt: notification.expiresAt,
+      userId: Array.isArray(notification.userId) ? notification.userId[0] : notification.userId,
+      type: Array.isArray(notification.type) ? notification.type[0] : notification.type,
+      title: Array.isArray(notification.title) ? notification.title[0] : notification.title,
+      message: Array.isArray(notification.message) ? notification.message[0] : notification.message,
+      data: Array.isArray(notification.data) ? JSON.parse(notification.data[0] || '{}') : notification.data || {},
+      isRead: Array.isArray(notification.isRead) ? notification.isRead[0] === 'true' : notification.isRead || false,
+      isPersistent: Array.isArray(notification.isPersistent) ? notification.isPersistent[0] === 'true' : notification.isPersistent || false,
+      expiresAt: Array.isArray(notification.expiresAt) ? notification.expiresAt[0] : notification.expiresAt,
       createdAt: notification.createdAt,
     };
   }
@@ -577,13 +577,13 @@ export class DataService {
   private mapConnectionFromSchema(connection: any): Connection {
     return {
       connectionId: connection.id,
-      userId: connection.userId,
-      sessionId: connection.sessionId,
-      status: connection.status,
+      userId: Array.isArray(connection.userId) ? connection.userId[0] : connection.userId,
+      sessionId: Array.isArray(connection.sessionId) ? connection.sessionId[0] : connection.sessionId,
+      status: Array.isArray(connection.status) ? connection.status[0] : connection.status,
       ipAddress: connection.ipAddress,
       userAgent: connection.userAgent,
       createdAt: connection.createdAt,
-      lastActivity: connection.lastActivity,
+      lastActivity: Array.isArray(connection.lastActivity) ? connection.lastActivity[0] : connection.lastActivity,
       disconnectedAt: connection.disconnectedAt,
     };
   }
@@ -597,11 +597,11 @@ export class DataService {
     // Handle Amplify/GraphQL specific errors
     if (error.errors && error.errors.length > 0) {
       const graphqlError = error.errors[0];
-      
+
       if (graphqlError.errorType === 'Unauthorized') {
         return new DataError(DataErrorType.PERMISSION_DENIED, 'Access denied', 403);
       }
-      
+
       if (graphqlError.errorType === 'DynamoDB:ConditionalCheckFailedException') {
         return new DataError(DataErrorType.DUPLICATE_KEY, 'Item already exists', 409);
       }
