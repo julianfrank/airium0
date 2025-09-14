@@ -1,3 +1,5 @@
+import { ChatMessage } from './chat.js';
+
 export interface AppSyncEvent {
   eventType: string;
   payload: any;
@@ -25,14 +27,7 @@ export interface ChatEvent extends AppSyncEvent {
   };
 }
 
-export interface ChatMessage {
-  id: string;
-  type: 'TEXT' | 'VOICE' | 'MEDIA';
-  content: string;
-  voiceSessionId?: string;
-  metadata?: Record<string, any>;
-  timestamp: string;
-}
+// ChatMessage is imported from chat.ts
 
 export interface UIControlEvent extends AppSyncEvent {
   eventType: 'ui_control_event';

@@ -13,11 +13,4 @@ export interface AppSyncEventService {
   publishChatEvent(userId: string, message: any): Promise<void>;
 }
 
-export interface VoiceResponse {
-  sessionId: string;
-  audioData?: string;
-  transcription?: string;
-  aiResponse?: string;
-  timestamp: string;
-  status: 'processing' | 'completed' | 'error';
-}
+// VoiceResponse is imported from nova-sonic-types.ts

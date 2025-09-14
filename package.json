@@ -1,7 +1,7 @@
 {
   "name": "airium",
-  "version": "1.0.0",
-  "description": "AI-powered groupware solution built on serverless AWS architecture",
+  "version": "0.2509.14",
+  "description": "AI-powered groupware self hosted solution built on serverless AWS architecture",
   "type": "module",
   "private": true,
   "workspaces": [
@@ -33,8 +33,8 @@
     "postinstall": "npm run build --workspace=shared"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
-    "typescript": "^5.6.0"
+    "@playwright/test": "1.55.0",
+    "typescript": "5.9.2"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -54,6 +54,6 @@
     "react",
     "nova-sonic"
   ],
-  "author": "Your Organization",
+  "author": "Julian Frank",
   "license": "MIT"
 }
