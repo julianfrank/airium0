@@ -1,4 +1,6 @@
 import type { WebSocketMessage } from '@airium/shared/types';
+import { amplifyOutputs } from './amplify';
+import { withRetry, retryConditions, CircuitBreaker } from './retry-utils';
 
 export interface WebSocketClientConfig {
   url: string;
@@ -6,15 +8,19 @@ export interface WebSocketClientConfig {
   maxReconnectAttempts?: number;
   heartbeatInterval?: number;
   connectionTimeout?: number;
+  enableCircuitBreaker?: boolean;
+  enableRetry?: boolean;
 }
 
 export interface WebSocketClientEvents {
   onConnect?: () => void;
   onDisconnect?: (code: number, reason: string) => void;
   onMessage?: (message: WebSocketMessage) => void;
-  onError?: (error: Event) => void;
+  onError?: (error: Event | Error) => void;
   onReconnecting?: (attempt: number) => void;
   onReconnectFailed?: () => void;
+  onCircuitBreakerOpen?: () => void;
+  onCircuitBreakerClosed?: () => void;
 }
 
 export enum WebSocketState {
@@ -24,6 +30,23 @@ export enum WebSocketState {
   DISCONNECTED = 'DISCONNECTED',
   RECONNECTING = 'RECONNECTING',
   ERROR = 'ERROR'
+}
+
+// Helper function to get WebSocket URL from Amplify configuration
+export function getWebSocketUrl(): string {
+  // Try to get from amplify_outputs.json custom configuration
+  if (amplifyOutputs.custom?.websocket_api_url) {
+    return amplifyOutputs.custom.websocket_api_url;
+  }
+  
+  // Fallback to environment variable
+  if (typeof process !== 'undefined' && process.env?.WEBSOCKET_API_URL) {
+    return process.env.WEBSOCKET_API_URL;
+  }
+  
+  // Development fallback
+  console.warn('WebSocket URL not configured, using placeholder');
+  return 'wss://placeholder.execute-api.us-east-1.amazonaws.com/production';
 }
 
 export class WebSocketClient {
@@ -37,6 +60,9 @@ export class WebSocketClient {
   private connectionTimer: NodeJS.Timeout | null = null;
   private messageQueue: WebSocketMessage[] = [];
   private isManualDisconnect = false;
+  private circuitBreaker: CircuitBreaker | null = null;
+  private lastErrorTime = 0;
+  private errorCount = 0;
 
   constructor(config: WebSocketClientConfig, events: WebSocketClientEvents = {}) {
     this.config = {
@@ -44,16 +70,33 @@ export class WebSocketClient {
       maxReconnectAttempts: 5,
       heartbeatInterval: 30000,
       connectionTimeout: 10000,
+      enableCircuitBreaker: true,
+      enableRetry: true,
       ...config
     };
     this.events = events;
+    
+    if (this.config.enableCircuitBreaker) {
+      this.circuitBreaker = new CircuitBreaker(3, 30000); // 3 failures, 30s recovery
+    }
   }
 
   public connect(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    const connectOperation = () => new Promise<void>((resolve, reject) => {
       if (this.state === WebSocketState.CONNECTED || this.state === WebSocketState.CONNECTING) {
         resolve();
         return;
+      }
+
+      // Check circuit breaker
+      if (this.circuitBreaker) {
+        const breakerState = this.circuitBreaker.getState();
+        if (breakerState.state === 'OPEN') {
+          const error = new Error('Circuit breaker is OPEN - too many connection failures');
+          this.events.onCircuitBreakerOpen?.();
+          reject(error);
+          return;
+        }
       }
 
       this.isManualDisconnect = false;
@@ -64,10 +107,23 @@ export class WebSocketClient {
         this.setupEventListeners(resolve, reject);
         this.startConnectionTimeout(reject);
       } catch (error) {
-        this.setState(WebSocketState.ERROR);
+        this.handleConnectionError(error as Error);
         reject(error);
       }
     });
+
+    if (this.config.enableRetry) {
+      return withRetry(connectOperation, {
+        maxAttempts: 3,
+        baseDelay: 1000,
+        retryCondition: retryConditions.websocketErrors,
+        onRetry: (attempt, error) => {
+          console.warn(`WebSocket connection attempt ${attempt} failed:`, error);
+        }
+      });
+    }
+
+    return connectOperation();
   }
 
   public disconnect(): void {
@@ -85,10 +141,22 @@ export class WebSocketClient {
   public send(message: WebSocketMessage): boolean {
     if (this.state === WebSocketState.CONNECTED && this.ws) {
       try {
-        this.ws.send(JSON.stringify(message));
+        // Execute through circuit breaker if enabled
+        if (this.circuitBreaker) {
+          this.circuitBreaker.execute(() => {
+            this.ws!.send(JSON.stringify(message));
+            return Promise.resolve();
+          }).catch((error) => {
+            console.error('Circuit breaker prevented message send:', error);
+            this.queueMessage(message);
+          });
+        } else {
+          this.ws.send(JSON.stringify(message));
+        }
         return true;
       } catch (error) {
         console.error('Failed to send message:', error);
+        this.handleSendError(error as Error);
         this.queueMessage(message);
         return false;
       }
@@ -232,5 +300,53 @@ export class WebSocketClient {
         this.send(message);
       }
     }
+  }
+
+  private handleConnectionError(error: Error): void {
+    this.errorCount++;
+    this.lastErrorTime = Date.now();
+    this.setState(WebSocketState.ERROR);
+    
+    // Report error with context
+    const errorReport = {
+      type: 'websocket_connection_error',
+      message: error.message,
+      errorCount: this.errorCount,
+      reconnectAttempts: this.reconnectAttempts,
+      timestamp: new Date().toISOString(),
+    };
+    
+    console.error('WebSocket connection error:', errorReport);
+    this.events.onError?.(error);
+  }
+
+  private handleSendError(error: Error): void {
+    const errorReport = {
+      type: 'websocket_send_error',
+      message: error.message,
+      state: this.state,
+      timestamp: new Date().toISOString(),
+    };
+    
+    console.error('WebSocket send error:', errorReport);
+    this.events.onError?.(error);
+  }
+
+  public getConnectionHealth(): {
+    state: WebSocketState;
+    errorCount: number;
+    lastErrorTime: number;
+    reconnectAttempts: number;
+    queuedMessages: number;
+    circuitBreakerState?: any;
+  } {
+    return {
+      state: this.state,
+      errorCount: this.errorCount,
+      lastErrorTime: this.lastErrorTime,
+      reconnectAttempts: this.reconnectAttempts,
+      queuedMessages: this.messageQueue.length,
+      circuitBreakerState: this.circuitBreaker?.getState(),
+    };
   }
 }

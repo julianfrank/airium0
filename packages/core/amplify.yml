@@ -3,17 +3,38 @@ backend:
   phases:
     preBuild:
       commands:
+        - echo "Starting Core Module backend build for environment $AWS_BRANCH"
         - npm ci
+        # Install dependencies for all Lambda functions
         - cd lib/lambda-functions/websocket-handler && npm ci
         - cd ../nova-sonic-processor && npm ci
         - cd ../appsync-event-publisher && npm ci
         - cd ../connection-manager && npm ci
+        - cd ../../..
+        - echo "Lambda dependencies installed"
     build:
       commands:
-        - npx ampx generate outputs --app-id local
+        - echo "Building Lambda functions"
+        - npm run build:lambdas
+        - echo "Generating Amplify outputs"
+        - npx ampx generate outputs --app-id $AWS_APP_ID --branch $AWS_BRANCH
+        - echo "Building TypeScript"
         - npm run build
+        - echo "Backend build completed successfully"
+    postBuild:
+      commands:
+        - echo "Running post-build validations"
+        - ls -la amplify_outputs.json
+        - echo "Copying amplify_outputs.json to UI module"
+        - cp amplify_outputs.json ../ui/amplify_outputs.json
   artifacts:
     baseDirectory: .
     files:
       - amplify_outputs.json
-      - '**/*'
+      - dist/**/*
+      - lib/**/*
+      - amplify/**/*
+  cache:
+    paths:
+      - node_modules/**/*
+      - lib/lambda-functions/*/node_modules/**/*

@@ -1,0 +1,35 @@
+{
+  "environment": "staging",
+  "aws": {
+    "region": "us-east-1",
+    "profile": "default"
+  },
+  "amplify": {
+    "appId": "staging-airium-app",
+    "branch": "staging"
+  },
+  "domain": {
+    "name": "staging.devposthackathon.tojf.link",
+    "certificateArn": ""
+  },
+  "monitoring": {
+    "enableCloudWatch": true,
+    "enableXRay": true,
+    "logLevel": "INFO",
+    "retentionDays": 14
+  },
+  "security": {
+    "enableWAF": true,
+    "enableCloudTrail": true,
+    "enableGuardDuty": true
+  },
+  "backup": {
+    "enableAutomatedBackup": true,
+    "retentionDays": 14
+  },
+  "scaling": {
+    "lambdaConcurrency": 50,
+    "dynamoDbReadCapacity": 10,
+    "dynamoDbWriteCapacity": 10
+  }
+}

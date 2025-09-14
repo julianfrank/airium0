@@ -1,0 +1,195 @@
+name: Deploy AIrium Application
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - staging
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install root dependencies
+        run: npm ci
+        
+      - name: Install Core module dependencies
+        run: |
+          cd packages/core
+          npm ci
+          
+      - name: Install UI module dependencies
+        run: |
+          cd packages/ui
+          npm ci
+          
+      - name: Run Core module tests
+        run: |
+          cd packages/core
+          npm run test
+          
+      - name: Run UI module tests
+        run: |
+          cd packages/ui
+          npm run test
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=high
+          cd packages/core && npm audit --audit-level=high
+          cd ../ui && npm audit --audit-level=high
+
+  deploy-backend:
+    name: Deploy Backend (Core Module)
+    runs-on: ubuntu-latest
+    needs: [test, security-scan]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
+    
+    environment:
+      name: ${{ github.ref_name }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd packages/core
+          npm ci
+          
+      - name: Build and deploy backend
+        run: |
+          cd packages/core
+          npm run build
+          npx ampx deploy --branch ${{ github.ref_name }}
+        env:
+          AWS_BRANCH: ${{ github.ref_name }}
+          
+      - name: Upload amplify_outputs.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: amplify-outputs-${{ github.ref_name }}
+          path: packages/core/amplify_outputs.json
+          retention-days: 30
+
+  deploy-frontend:
+    name: Deploy Frontend (UI Module)
+    runs-on: ubuntu-latest
+    needs: deploy-backend
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
+    
+    environment:
+      name: ${{ github.ref_name }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Configure AWS credentials
+        uses: actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          
+      - name: Download amplify_outputs.json
+        uses: actions/download-artifact@v4
+        with:
+          name: amplify-outputs-${{ github.ref_name }}
+          path: packages/ui/
+          
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd packages/ui
+          npm ci
+          
+      - name: Build and deploy frontend
+        run: |
+          cd packages/ui
+          npm run build
+          npx ampx deploy --branch ${{ github.ref_name }}
+        env:
+          AWS_BRANCH: ${{ github.ref_name }}
+
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install Playwright
+        run: |
+          npm ci
+          npx playwright install --with-deps
+          
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ github.ref_name }}
+          path: playwright-report/
+          retention-days: 30

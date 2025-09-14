@@ -3,10 +3,15 @@ frontend:
   phases:
     preBuild:
       commands:
+        - echo "Starting UI Module build for environment $AWS_BRANCH"
         - npm ci
+        # Import amplify_outputs.json from Core Module
+        - cp ../core/amplify_outputs.json ./amplify_outputs.json || echo "amplify_outputs.json not found, using local config"
     build:
       commands:
+        - echo "Building Astro SSG application"
         - npm run build
+        - echo "Build completed successfully"
   artifacts:
     baseDirectory: dist
     files:
@@ -14,3 +19,28 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
+  customHeaders:
+    - pattern: '**/*'
+      headers:
+        - key: 'Strict-Transport-Security'
+          value: 'max-age=31536000; includeSubDomains'
+        - key: 'X-Content-Type-Options'
+          value: 'nosniff'
+        - key: 'X-Frame-Options'
+          value: 'DENY'
+        - key: 'X-XSS-Protection'
+          value: '1; mode=block'
+        - key: 'Referrer-Policy'
+          value: 'strict-origin-when-cross-origin'
+    - pattern: '*.js'
+      headers:
+        - key: 'Cache-Control'
+          value: 'public, max-age=31536000, immutable'
+    - pattern: '*.css'
+      headers:
+        - key: 'Cache-Control'
+          value: 'public, max-age=31536000, immutable'
+    - pattern: '*.html'
+      headers:
+        - key: 'Cache-Control'
+          value: 'public, max-age=3600'

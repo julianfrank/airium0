@@ -6,6 +6,9 @@ import { AudioStreamer } from './AudioStreamer';
 import { VoiceSessionManager } from './VoiceSessionManager';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
+import { ErrorBoundary } from '../error/ErrorBoundary';
+import { useErrorHandler } from '../error/useErrorHandler';
+import { ErrorMessage } from '../error/ErrorMessage';
 import type { VoiceSession, VoiceSessionConfig } from '@airium/shared';
 
 export interface VoiceChatProps {
@@ -26,7 +29,7 @@ export interface VoiceChatState {
   error: string | null;
 }
 
-export function VoiceChat({
+function VoiceChatInner({
   userId,
   onTranscription,
   onAIResponse,
@@ -41,6 +44,13 @@ export function VoiceChat({
     transcription: '',
     aiResponse: '',
     error: null
+  });
+
+  const { handleError, clearError: clearHandlerError, wrapAsync } = useErrorHandler({
+    onError: (error) => {
+      setState(prev => ({ ...prev, error: error.message }));
+      onError?.(error.message);
+    },
   });
 
   const audioStreamerRef = useRef<{ startRecording: () => void; stopRecording: () => void } | null>(null);
@@ -132,8 +142,8 @@ export function VoiceChat({
     }
   }, [state.currentSessionId, wsConnected, sendVoiceMessage]);
 
-  const handleRecordingStart = useCallback(async () => {
-    try {
+  const handleRecordingStart = useCallback(
+    wrapAsync(async () => {
       // Create new voice session
       const sessionId = await sessionManagerRef.current?.createSession();
       if (!sessionId) {
@@ -151,15 +161,12 @@ export function VoiceChat({
 
       // Start WebSocket voice session
       startVoiceSession();
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to start recording';
-      setState(prev => ({ ...prev, error: errorMsg }));
-      onError?.(errorMsg);
-    }
-  }, [startVoiceSession, onError]);
+    }),
+    [startVoiceSession, wrapAsync]
+  );
 
-  const handleRecordingStop = useCallback(async () => {
-    try {
+  const handleRecordingStop = useCallback(
+    wrapAsync(async () => {
       setState(prev => ({ ...prev, isRecording: false, isProcessing: true }));
 
       // End WebSocket voice session
@@ -167,12 +174,9 @@ export function VoiceChat({
         endVoiceSession(state.currentSessionId);
         await sessionManagerRef.current?.endSession(state.currentSessionId);
       }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to stop recording';
-      setState(prev => ({ ...prev, error: errorMsg, isProcessing: false }));
-      onError?.(errorMsg);
-    }
-  }, [state.currentSessionId, endVoiceSession, onError]);
+    }),
+    [state.currentSessionId, endVoiceSession, wrapAsync]
+  );
 
   const handleStartRecording = useCallback(() => {
     audioStreamerRef.current?.startRecording();
@@ -208,7 +212,8 @@ export function VoiceChat({
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
-  }, []);
+    clearHandlerError();
+  }, [clearHandlerError]);
 
   return (
     <div className={`voice-chat ${className}`}>
@@ -229,17 +234,18 @@ export function VoiceChat({
 
           {/* Error Display */}
           {state.error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-              <div className="flex justify-between items-start">
-                <p className="text-sm text-red-700">{state.error}</p>
-                <button
-                  onClick={clearError}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
+            <ErrorMessage
+              error={state.error}
+              title="Voice Chat Error"
+              onRetry={() => {
+                clearError();
+                if (!state.isRecording && !state.isProcessing) {
+                  handleStartRecording();
+                }
+              }}
+              onDismiss={clearError}
+              showRetry={!state.isRecording && !state.isProcessing}
+            />
           )}
 
           {/* Recording Controls */}
@@ -322,6 +328,30 @@ export function VoiceChat({
         userId={userId}
       />
     </div>
+  );
+}
+
+// Export wrapped component with error boundary
+export function VoiceChat(props: VoiceChatProps) {
+  return (
+    <ErrorBoundary
+      fallback={
+        <Card className="p-6">
+          <ErrorMessage
+            error="Voice chat component failed to load"
+            title="Voice Chat Error"
+            onRetry={() => window.location.reload()}
+            showDetails={true}
+          />
+        </Card>
+      }
+      onError={(error, errorInfo) => {
+        console.error('VoiceChat Error Boundary:', error, errorInfo);
+        props.onError?.(`Component error: ${error.message}`);
+      }}
+    >
+      <VoiceChatInner {...props} />
+    </ErrorBoundary>
   );
 }
 

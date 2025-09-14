@@ -1,51 +1,32 @@
 import { Amplify } from 'aws-amplify';
 import { initializeAppSyncClient } from './appsync-client';
-
-// This will be populated from the Core module's amplify_outputs.json
-// For now, we'll create a placeholder configuration
-const amplifyConfig = {
-  // Configuration will be imported from @airium/core/amplify_outputs.json
-  // when the Core module is fully set up
-  API: {
-    GraphQL: {
-      endpoint: process.env.GRAPHQL_API_URL || '',
-      region: process.env.AWS_REGION || 'us-east-1',
-      defaultAuthMode: 'userPool'
-    }
-  },
-  Auth: {
-    Cognito: {
-      userPoolId: process.env.USER_POOL_ID || '',
-      userPoolClientId: process.env.USER_POOL_CLIENT_ID || '',
-      identityPoolId: process.env.IDENTITY_POOL_ID || '',
-    }
-  }
-};
+import amplifyOutputs from '../../amplify_outputs.json';
 
 export const configureAmplify = () => {
   try {
-    // Import amplify_outputs.json from Core module
-    // This will be updated once the Core module generates the outputs
-    console.log('Amplify configuration will be loaded from Core module');
+    // Configure Amplify with the outputs from the deployed backend
+    Amplify.configure(amplifyOutputs);
     
-    // For now, configure with environment variables or defaults
-    if (process.env.GRAPHQL_API_URL) {
-      Amplify.configure(amplifyConfig);
-      
-      // Initialize AppSync client after Amplify configuration
+    // Initialize AppSync client after Amplify configuration
+    if (amplifyOutputs.data?.url) {
       initializeAppSyncClient({
-        graphqlEndpoint: process.env.GRAPHQL_API_URL,
-        region: process.env.AWS_REGION || 'us-east-1',
+        graphqlEndpoint: amplifyOutputs.data.url,
+        region: amplifyOutputs.data.aws_region || 'us-east-1',
         authenticationType: 'AMAZON_COGNITO_USER_POOLS'
       });
       
       console.log('Amplify and AppSync configured successfully');
     } else {
-      console.warn('GraphQL API URL not available, skipping configuration');
+      console.warn('GraphQL API URL not available in amplify_outputs.json');
     }
   } catch (error) {
-    console.warn('Amplify configuration not yet available from Core module:', error);
+    console.error('Failed to configure Amplify:', error);
+    // Fallback configuration for development
+    console.warn('Using fallback configuration for development');
   }
 };
 
 export { Amplify };
+
+// Export the configuration for use in other modules
+export { amplifyOutputs };

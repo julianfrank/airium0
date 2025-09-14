@@ -1,0 +1,45 @@
+{
+  "environment": "prod",
+  "aws": {
+    "region": "us-east-1",
+    "profile": "default"
+  },
+  "amplify": {
+    "appId": "prod-airium-app",
+    "branch": "main"
+  },
+  "domain": {
+    "name": "devposthackathon.tojf.link",
+    "certificateArn": ""
+  },
+  "monitoring": {
+    "enableCloudWatch": true,
+    "enableXRay": true,
+    "logLevel": "WARN",
+    "retentionDays": 30,
+    "enableAlarms": true,
+    "snsTopicArn": ""
+  },
+  "security": {
+    "enableWAF": true,
+    "enableCloudTrail": true,
+    "enableGuardDuty": true,
+    "enableSecurityHub": true
+  },
+  "backup": {
+    "enableAutomatedBackup": true,
+    "retentionDays": 30,
+    "enableCrossRegionBackup": true,
+    "backupRegion": "us-west-2"
+  },
+  "scaling": {
+    "lambdaConcurrency": 100,
+    "dynamoDbReadCapacity": 25,
+    "dynamoDbWriteCapacity": 25,
+    "enableAutoScaling": true
+  },
+  "performance": {
+    "enableCloudFront": true,
+    "cacheTTL": 3600
+  }
+}

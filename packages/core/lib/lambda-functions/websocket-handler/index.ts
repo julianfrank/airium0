@@ -3,6 +3,16 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, DeleteCommand, GetCommand, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import { createLambdaLogger, withLogging, withTiming } from '../shared/logger';
+import { 
+  withErrorHandling, 
+  ValidationError, 
+  NotFoundError, 
+  ExternalServiceError,
+  TimeoutError,
+  validateRequired,
+  validateString 
+} from '../shared/error-handler';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
@@ -64,54 +74,83 @@ interface ConnectionInfo {
   disconnectedAt?: string;
 }
 
-export const handler = async (
-  event: APIGatewayProxyWebsocketEventV2
-): Promise<APIGatewayProxyResultV2> => {
-  const { routeKey, connectionId, domainName, stage } = event.requestContext;
-  
-  console.log(`Route: ${routeKey}, ConnectionId: ${connectionId}`);
-
-  // Initialize API Gateway Management API client for sending messages back to clients
-  const apiGatewayClient = new ApiGatewayManagementApiClient({
-    endpoint: `https://${domainName}/${stage}`,
-  });
-
-  try {
-    switch (routeKey) {
-      case '$connect':
-        return await handleConnect(event);
-      case '$disconnect':
-        return await handleDisconnect(event);
-      case '$default':
-        return await handleMessage(event, apiGatewayClient);
-      default:
-        return { statusCode: 400, body: 'Unknown route' };
-    }
-  } catch (error) {
-    console.error('Error handling WebSocket event:', error);
+export const handler = withErrorHandling(
+  withLogging(async (
+    event: APIGatewayProxyWebsocketEventV2
+  ): Promise<APIGatewayProxyResultV2> => {
+    const logger = createLambdaLogger('websocket-handler', event);
+    const { routeKey, connectionId, domainName, stage } = event.requestContext;
     
-    // Try to send error message back to client
+    logger.info('WebSocket event received', {
+      routeKey,
+      connectionId,
+      domainName,
+      stage,
+    });
+
+    // Validate required fields
+    validateRequired(event.requestContext, ['routeKey', 'connectionId', 'domainName', 'stage']);
+
+    // Initialize API Gateway Management API client for sending messages back to clients
+    const apiGatewayClient = new ApiGatewayManagementApiClient({
+      endpoint: `https://${domainName}/${stage}`,
+    });
+
     try {
-      await sendMessageToConnection(apiGatewayClient, connectionId, {
-        type: 'error',
-        data: { message: 'Internal server error' },
-        timestamp: new Date().toISOString(),
-      });
-    } catch (sendError) {
-      console.error('Failed to send error message to client:', sendError);
+      switch (routeKey) {
+        case '$connect':
+          return await withTiming(
+            () => handleConnect(event, logger),
+            'handleConnect',
+            logger
+          )();
+        case '$disconnect':
+          return await withTiming(
+            () => handleDisconnect(event, logger),
+            'handleDisconnect',
+            logger
+          )();
+        case '$default':
+          return await withTiming(
+            () => handleMessage(event, apiGatewayClient, logger),
+            'handleMessage',
+            logger
+          )();
+        default:
+          logger.warn('Unknown route received', { routeKey });
+          return { statusCode: 400, body: 'Unknown route' };
+      }
+    } catch (error) {
+      logger.error('Error handling WebSocket event', { routeKey, connectionId }, error as Error);
+      
+      // Try to send error message back to client
+      try {
+        await sendMessageToConnection(apiGatewayClient, connectionId, {
+          type: 'error',
+          data: { message: 'Internal server error' },
+          timestamp: new Date().toISOString(),
+        }, logger);
+      } catch (sendError) {
+        logger.error('Failed to send error message to client', { connectionId }, sendError as Error);
+      }
+      
+      throw error; // Re-throw to be handled by error handler wrapper
     }
-    
-    return { statusCode: 500, body: 'Internal server error' };
-  }
-};
+  }, 'websocket-handler')
+);
 
-async function handleConnect(event: APIGatewayProxyWebsocketEventV2): Promise<APIGatewayProxyResultV2> {
+async function handleConnect(event: APIGatewayProxyWebsocketEventV2, logger: any): Promise<APIGatewayProxyResultV2> {
   const { connectionId } = event.requestContext;
   
   try {
     // Extract user information from query parameters or headers
     const userId = event.queryStringParameters?.userId || 'anonymous';
     const sessionId = event.queryStringParameters?.sessionId;
+    
+    // Validate userId if provided
+    if (userId !== 'anonymous') {
+      validateString(userId, 'userId', 1, 256);
+    }
     
     // Extract client information
     const ipAddress = event.requestContext.identity?.sourceIp;
@@ -128,139 +167,215 @@ async function handleConnect(event: APIGatewayProxyWebsocketEventV2): Promise<AP
       lastActivity: new Date().toISOString(),
     };
 
-    // Store connection in DynamoDB
-    await docClient.send(new PutCommand({
-      TableName: CONNECTIONS_TABLE_NAME,
-      Item: connection,
-    }));
+    logger.info('Storing connection in DynamoDB', {
+      connectionId,
+      userId,
+      sessionId,
+      ipAddress,
+    });
 
-    console.log(`Connection established: ${connectionId} for user: ${userId}`);
+    // Store connection in DynamoDB with retry logic
+    try {
+      await docClient.send(new PutCommand({
+        TableName: CONNECTIONS_TABLE_NAME,
+        Item: connection,
+      }));
+    } catch (dbError) {
+      logger.error('Failed to store connection in DynamoDB', { connectionId, userId }, dbError as Error);
+      throw new ExternalServiceError('Failed to store connection', 'DynamoDB');
+    }
+
+    logger.info('Connection established successfully', {
+      connectionId,
+      userId,
+      sessionId,
+    });
     
-    // Send welcome message
-    const welcomeMessage: WebSocketMessage = {
-      type: 'connection_established',
-      data: {
-        connectionId,
-        userId,
-        sessionId,
-        timestamp: connection.createdAt,
-      },
-      timestamp: new Date().toISOString(),
-    };
-
     return { statusCode: 200, body: 'Connected' };
     
   } catch (error) {
-    console.error('Error in handleConnect:', error);
-    return { statusCode: 500, body: 'Connection failed' };
+    logger.error('Error in handleConnect', { connectionId }, error as Error);
+    throw error; // Re-throw to be handled by wrapper
   }
 }
 
-async function handleDisconnect(event: APIGatewayProxyWebsocketEventV2): Promise<APIGatewayProxyResultV2> {
+async function handleDisconnect(event: APIGatewayProxyWebsocketEventV2, logger: any): Promise<APIGatewayProxyResultV2> {
   const { connectionId } = event.requestContext;
 
   try {
-    // Get connection info before deleting
-    const getResult = await docClient.send(new GetCommand({
-      TableName: CONNECTIONS_TABLE_NAME,
-      Key: { connectionId },
-    }));
+    logger.info('Processing disconnect request', { connectionId });
 
-    if (getResult.Item) {
-      const connection = getResult.Item as ConnectionInfo;
-      
-      // Update connection status to disconnected with timestamp
-      await docClient.send(new UpdateCommand({
+    // Get connection info before updating
+    let connection: ConnectionInfo | null = null;
+    try {
+      const getResult = await docClient.send(new GetCommand({
         TableName: CONNECTIONS_TABLE_NAME,
         Key: { connectionId },
-        UpdateExpression: 'SET #status = :status, disconnectedAt = :disconnectedAt',
-        ExpressionAttributeNames: {
-          '#status': 'status',
-        },
-        ExpressionAttributeValues: {
-          ':status': 'DISCONNECTED',
-          ':disconnectedAt': new Date().toISOString(),
-        },
       }));
+      connection = getResult.Item as ConnectionInfo || null;
+    } catch (dbError) {
+      logger.error('Failed to retrieve connection info', { connectionId }, dbError as Error);
+      throw new ExternalServiceError('Failed to retrieve connection info', 'DynamoDB');
+    }
 
-      console.log(`Connection closed: ${connectionId} for user: ${connection.userId}`);
+    if (connection) {
+      logger.info('Connection found, updating status', {
+        connectionId,
+        userId: connection.userId,
+        sessionId: connection.sessionId,
+      });
+      
+      // Update connection status to disconnected with timestamp
+      try {
+        await docClient.send(new UpdateCommand({
+          TableName: CONNECTIONS_TABLE_NAME,
+          Key: { connectionId },
+          UpdateExpression: 'SET #status = :status, disconnectedAt = :disconnectedAt',
+          ExpressionAttributeNames: {
+            '#status': 'status',
+          },
+          ExpressionAttributeValues: {
+            ':status': 'DISCONNECTED',
+            ':disconnectedAt': new Date().toISOString(),
+          },
+        }));
+      } catch (dbError) {
+        logger.error('Failed to update connection status', { connectionId }, dbError as Error);
+        throw new ExternalServiceError('Failed to update connection status', 'DynamoDB');
+      }
+
+      logger.info('Connection disconnected successfully', {
+        connectionId,
+        userId: connection.userId,
+        sessionId: connection.sessionId,
+      });
       
       // TODO: Clean up any active voice sessions for this connection
       // TODO: Notify other services about disconnection
+      
+      // Publish disconnection event
+      try {
+        await publishEvent('connection_disconnected', {
+          connectionId,
+          userId: connection.userId,
+          sessionId: connection.sessionId,
+        }, connection.userId);
+      } catch (eventError) {
+        logger.warn('Failed to publish disconnection event', { connectionId }, eventError as Error);
+        // Don't fail the disconnect for event publishing errors
+      }
+      
     } else {
-      console.log(`Connection ${connectionId} not found in database`);
+      logger.warn('Connection not found in database', { connectionId });
     }
 
     return { statusCode: 200, body: 'Disconnected' };
     
   } catch (error) {
-    console.error('Error in handleDisconnect:', error);
-    return { statusCode: 500, body: 'Disconnect failed' };
+    logger.error('Error in handleDisconnect', { connectionId }, error as Error);
+    throw error; // Re-throw to be handled by wrapper
   }
 }
 
 async function handleMessage(
   event: APIGatewayProxyWebsocketEventV2,
-  apiGatewayClient: ApiGatewayManagementApiClient
+  apiGatewayClient: ApiGatewayManagementApiClient,
+  logger: any
 ): Promise<APIGatewayProxyResultV2> {
   const { connectionId } = event.requestContext;
   
   try {
-    const message: WebSocketMessage = event.body ? JSON.parse(event.body) : {};
+    // Parse and validate message
+    let message: WebSocketMessage;
+    try {
+      message = event.body ? JSON.parse(event.body) : {};
+    } catch (parseError) {
+      logger.error('Failed to parse message body', { connectionId }, parseError as Error);
+      throw new ValidationError('Invalid JSON in message body');
+    }
     
-    console.log(`Message received from ${connectionId}:`, message);
+    // Validate message structure
+    validateRequired(message, ['type']);
+    validateString(message.type, 'type', 1, 50);
+    
+    logger.info('Message received', {
+      connectionId,
+      messageType: message.type,
+      hasData: !!message.data,
+    });
 
-    // Update last activity
-    await docClient.send(new UpdateCommand({
-      TableName: CONNECTIONS_TABLE_NAME,
-      Key: { connectionId },
-      UpdateExpression: 'SET lastActivity = :lastActivity',
-      ExpressionAttributeValues: {
-        ':lastActivity': new Date().toISOString(),
-      },
-    }));
+    // Update last activity with error handling
+    try {
+      await docClient.send(new UpdateCommand({
+        TableName: CONNECTIONS_TABLE_NAME,
+        Key: { connectionId },
+        UpdateExpression: 'SET lastActivity = :lastActivity',
+        ExpressionAttributeValues: {
+          ':lastActivity': new Date().toISOString(),
+        },
+      }));
+    } catch (dbError) {
+      logger.warn('Failed to update last activity', { connectionId }, dbError as Error);
+      // Don't fail the message processing for this
+    }
 
     // Get connection info
-    const connectionInfo = await getConnectionInfo(connectionId);
+    const connectionInfo = await getConnectionInfo(connectionId, logger);
     if (!connectionInfo) {
-      throw new Error('Connection not found');
+      throw new NotFoundError('Connection not found');
     }
 
-    // Handle different message types
-    switch (message.type) {
-      case 'voice_start':
-        return await handleVoiceStart(connectionId, message as VoiceStartMessage, apiGatewayClient, connectionInfo);
-      case 'voice_data':
-        return await handleVoiceData(connectionId, message as VoiceDataMessage, apiGatewayClient, connectionInfo);
-      case 'voice_end':
-        return await handleVoiceEnd(connectionId, message as VoiceEndMessage, apiGatewayClient, connectionInfo);
-      case 'text_message':
-        return await handleTextMessage(connectionId, message as TextMessage, apiGatewayClient, connectionInfo);
-      case 'ping':
-        return await handlePing(connectionId, apiGatewayClient);
-      default:
-        console.log(`Unknown message type: ${message.type}`);
+    // Handle different message types with individual error handling
+    try {
+      switch (message.type) {
+        case 'voice_start':
+          return await handleVoiceStart(connectionId, message as VoiceStartMessage, apiGatewayClient, connectionInfo, logger);
+        case 'voice_data':
+          return await handleVoiceData(connectionId, message as VoiceDataMessage, apiGatewayClient, connectionInfo, logger);
+        case 'voice_end':
+          return await handleVoiceEnd(connectionId, message as VoiceEndMessage, apiGatewayClient, connectionInfo, logger);
+        case 'text_message':
+          return await handleTextMessage(connectionId, message as TextMessage, apiGatewayClient, connectionInfo, logger);
+        case 'ping':
+          return await handlePing(connectionId, apiGatewayClient, logger);
+        default:
+          logger.warn('Unknown message type received', { connectionId, messageType: message.type });
+          
+          await sendMessageToConnection(apiGatewayClient, connectionId, {
+            type: 'error',
+            data: { message: `Unknown message type: ${message.type}` },
+            timestamp: new Date().toISOString(),
+          }, logger);
+          
+          throw new ValidationError(`Unknown message type: ${message.type}`);
+      }
+    } catch (handlerError) {
+      logger.error('Message handler failed', {
+        connectionId,
+        messageType: message.type,
+      }, handlerError as Error);
+      
+      // Send specific error message to client
+      try {
         await sendMessageToConnection(apiGatewayClient, connectionId, {
           type: 'error',
-          data: { message: `Unknown message type: ${message.type}` },
+          data: { 
+            message: 'Failed to process message',
+            messageType: message.type,
+            errorCode: (handlerError as any).name || 'PROCESSING_ERROR'
+          },
           timestamp: new Date().toISOString(),
-        });
-        return { statusCode: 400, body: 'Unknown message type' };
+        }, logger);
+      } catch (sendError) {
+        logger.error('Failed to send error message to client', { connectionId }, sendError as Error);
+      }
+      
+      throw handlerError;
     }
+    
   } catch (error) {
-    console.error('Error in handleMessage:', error);
-    
-    try {
-      await sendMessageToConnection(apiGatewayClient, connectionId, {
-        type: 'error',
-        data: { message: 'Failed to process message' },
-        timestamp: new Date().toISOString(),
-      });
-    } catch (sendError) {
-      console.error('Failed to send error message:', sendError);
-    }
-    
-    return { statusCode: 500, body: 'Message processing failed' };
+    logger.error('Error in handleMessage', { connectionId }, error as Error);
+    throw error; // Re-throw to be handled by wrapper
   }
 }
 
@@ -268,10 +383,21 @@ async function handleVoiceStart(
   connectionId: string,
   message: VoiceStartMessage,
   apiGatewayClient: ApiGatewayManagementApiClient,
-  connectionInfo: ConnectionInfo
+  connectionInfo: ConnectionInfo,
+  logger: any
 ): Promise<APIGatewayProxyResultV2> {
   try {
-    console.log(`Starting voice session for connection: ${connectionId}`);
+    logger.info('Starting voice session', {
+      connectionId,
+      userId: connectionInfo.userId,
+      requestedSessionId: message.data?.sessionId,
+      audioFormat: message.data?.audioFormat,
+    });
+    
+    // Validate voice start data
+    if (message.data?.audioFormat) {
+      validateString(message.data.audioFormat, 'audioFormat', 1, 20);
+    }
     
     // Generate a unique session ID if not provided
     const sessionId = message.data?.sessionId || `voice-${Date.now()}-${connectionId}`;
@@ -289,21 +415,34 @@ async function handleVoiceStart(
         status: 'ACTIVE',
       },
       timestamp: new Date().toISOString(),
+    }, logger);
+    
+    logger.info('Voice session started successfully', {
+      connectionId,
+      userId: connectionInfo.userId,
+      sessionId,
+      audioFormat,
     });
     
-    console.log(`Voice session started: ${sessionId} for connection: ${connectionId}`);
     return { statusCode: 200, body: 'Voice session started' };
     
   } catch (error) {
-    console.error('Error starting voice session:', error);
+    logger.error('Error starting voice session', {
+      connectionId,
+      userId: connectionInfo.userId,
+    }, error as Error);
     
-    await sendMessageToConnection(apiGatewayClient, connectionId, {
-      type: 'voice_session_error',
-      data: { message: 'Failed to start voice session' },
-      timestamp: new Date().toISOString(),
-    });
+    try {
+      await sendMessageToConnection(apiGatewayClient, connectionId, {
+        type: 'voice_session_error',
+        data: { message: 'Failed to start voice session' },
+        timestamp: new Date().toISOString(),
+      }, logger);
+    } catch (sendError) {
+      logger.error('Failed to send voice session error message', { connectionId }, sendError as Error);
+    }
     
-    return { statusCode: 500, body: 'Voice session start failed' };
+    throw error; // Re-throw to be handled by wrapper
   }
 }
 
@@ -311,7 +450,8 @@ async function handleVoiceData(
   connectionId: string,
   message: VoiceDataMessage,
   apiGatewayClient: ApiGatewayManagementApiClient,
-  connectionInfo: ConnectionInfo
+  connectionInfo: ConnectionInfo,
+  logger: any
 ): Promise<APIGatewayProxyResultV2> {
   try {
     console.log(`Processing voice data for connection: ${connectionId}, session: ${message.data.sessionId}`);
@@ -352,7 +492,8 @@ async function handleVoiceEnd(
   connectionId: string,
   message: VoiceEndMessage,
   apiGatewayClient: ApiGatewayManagementApiClient,
-  connectionInfo: ConnectionInfo
+  connectionInfo: ConnectionInfo,
+  logger: any
 ): Promise<APIGatewayProxyResultV2> {
   try {
     console.log(`Ending voice session for connection: ${connectionId}, session: ${message.data.sessionId}`);
@@ -393,7 +534,8 @@ async function handleTextMessage(
   connectionId: string,
   message: TextMessage,
   apiGatewayClient: ApiGatewayManagementApiClient,
-  connectionInfo: ConnectionInfo
+  connectionInfo: ConnectionInfo,
+  logger: any
 ): Promise<APIGatewayProxyResultV2> {
   try {
     console.log(`Processing text message for connection: ${connectionId}`);
@@ -447,59 +589,101 @@ async function handleTextMessage(
 
 async function handlePing(
   connectionId: string,
-  apiGatewayClient: ApiGatewayManagementApiClient
+  apiGatewayClient: ApiGatewayManagementApiClient,
+  logger: any
 ): Promise<APIGatewayProxyResultV2> {
   try {
+    logger.debug('Processing ping request', { connectionId });
+    
     await sendMessageToConnection(apiGatewayClient, connectionId, {
       type: 'pong',
       timestamp: new Date().toISOString(),
-    });
+    }, logger);
     
+    logger.debug('Pong sent successfully', { connectionId });
     return { statusCode: 200, body: 'Pong sent' };
   } catch (error) {
-    console.error('Error handling ping:', error);
-    return { statusCode: 500, body: 'Ping failed' };
+    logger.error('Error handling ping', { connectionId }, error as Error);
+    throw error; // Re-throw to be handled by wrapper
   }
 }
 
 // Utility functions
-async function getConnectionInfo(connectionId: string): Promise<ConnectionInfo | null> {
+async function getConnectionInfo(connectionId: string, logger?: any): Promise<ConnectionInfo | null> {
   try {
     const result = await docClient.send(new GetCommand({
       TableName: CONNECTIONS_TABLE_NAME,
       Key: { connectionId },
     }));
     
-    return result.Item as ConnectionInfo || null;
+    const connection = result.Item as ConnectionInfo || null;
+    
+    if (connection) {
+      logger?.debug('Connection info retrieved', {
+        connectionId,
+        userId: connection.userId,
+        status: connection.status,
+      });
+    } else {
+      logger?.warn('Connection not found', { connectionId });
+    }
+    
+    return connection;
   } catch (error) {
-    console.error('Error getting connection info:', error);
-    return null;
+    logger?.error('Error getting connection info', { connectionId }, error as Error);
+    throw new ExternalServiceError('Failed to retrieve connection info', 'DynamoDB');
   }
 }
 
 async function sendMessageToConnection(
   apiGatewayClient: ApiGatewayManagementApiClient,
   connectionId: string,
-  message: WebSocketMessage
+  message: WebSocketMessage,
+  logger?: any
 ): Promise<void> {
   try {
+    const startTime = Date.now();
+    
     await apiGatewayClient.send(new PostToConnectionCommand({
       ConnectionId: connectionId,
       Data: JSON.stringify(message),
     }));
+    
+    const duration = Date.now() - startTime;
+    logger?.debug('Message sent successfully', {
+      connectionId,
+      messageType: message.type,
+      duration,
+    });
+    
   } catch (error) {
-    console.error(`Error sending message to connection ${connectionId}:`, error);
+    const apiError = error as any;
+    logger?.error('Error sending message to connection', {
+      connectionId,
+      messageType: message.type,
+      errorName: apiError.name,
+    }, apiError);
     
     // If connection is stale, remove it from database
-    if (error.name === 'GoneException') {
-      console.log(`Removing stale connection: ${connectionId}`);
-      await docClient.send(new DeleteCommand({
-        TableName: CONNECTIONS_TABLE_NAME,
-        Key: { connectionId },
-      }));
+    if (apiError.name === 'GoneException') {
+      logger?.info('Removing stale connection', { connectionId });
+      
+      try {
+        await docClient.send(new DeleteCommand({
+          TableName: CONNECTIONS_TABLE_NAME,
+          Key: { connectionId },
+        }));
+        
+        logger?.info('Stale connection removed successfully', { connectionId });
+      } catch (dbError) {
+        logger?.error('Failed to remove stale connection', { connectionId }, dbError as Error);
+      }
     }
     
-    throw error;
+    throw new ExternalServiceError(
+      `Failed to send message to connection: ${apiError.message}`,
+      'ApiGatewayManagementApi'
+    );
   }
 }
 

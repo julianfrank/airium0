@@ -10,7 +10,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "echo 'Linting disabled - TypeScript compilation provides type checking'",
-    "clean": "rm -rf dist .astro"
+    "clean": "rm -rf dist .astro",
+    "deploy": "npm run build && npx ampx deploy",
+    "deploy:prod": "npm run build && npx ampx deploy --branch main",
+    "deploy:staging": "npm run build && npx ampx deploy --branch staging"
   },
   "dependencies": {
     "@airium/shared": "*",
