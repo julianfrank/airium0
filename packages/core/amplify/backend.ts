@@ -7,6 +7,7 @@ import { NovaSonicStack } from '../lib/cdk-stacks/nova-sonic-stack';
 import { AppSyncEventsStack } from '../lib/cdk-stacks/appsync-events-stack';
 import { AuthStack } from '../lib/cdk-stacks/auth-stack';
 import { ApplicationStack } from '../lib/cdk-stacks/application-stack';
+import { MediaStorageStack } from '../lib/cdk-stacks/media-storage-stack';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -56,6 +57,13 @@ const applicationManagement = new ApplicationStack(applicationStack, 'Applicatio
   groupsTableArn: backend.data.resources.tables['Group'].tableArn,
 });
 
+const mediaStorageStack = backend.createStack('MediaStorageStack');
+const mediaStorage = new MediaStorageStack(mediaStorageStack, 'MediaStorage', {
+  userPoolId: backend.auth.resources.userPool.userPoolId,
+  identityPoolId: backend.auth.resources.identityPoolId,
+  bucketName: backend.storage.resources.bucket.bucketName,
+});
+
 // Add AppSync Events configuration to amplify outputs
 backend.addOutput({
   custom: {
@@ -69,8 +77,17 @@ backend.addOutput({
       apiId: applicationManagement.applicationApi.restApiId,
       functionName: applicationManagement.applicationFunction.functionName,
     },
+    mediaStorage: {
+      apiUrl: mediaStorage.mediaApi.url,
+      apiId: mediaStorage.mediaApi.restApiId,
+      bucketName: mediaStorage.mediaBucket.bucketName,
+      metadataTableName: mediaStorage.metadataTable.tableName,
+      uploadFunctionName: mediaStorage.uploadFunction.functionName,
+      downloadFunctionName: mediaStorage.downloadFunction.functionName,
+      metadataFunctionName: mediaStorage.metadataFunction.functionName,
+    },
   },
 });
 
 // Export the backend and additional resources
-export { backend, authManagement, webSocket, novaSonic, appSyncEvents, applicationManagement };
+export { backend, authManagement, webSocket, novaSonic, appSyncEvents, applicationManagement, mediaStorage };
