@@ -1,0 +1,26 @@
+---
+import GeneralLayout from '../layouts/GeneralLayout.astro';
+---
+
+<GeneralLayout title="AIrium - Applications">
+  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+    <div id="application-grid-container"></div>
+  </div>
+</GeneralLayout>
+
+<script>
+  import { ApplicationGrid } from '../components/applications/ApplicationGrid';
+  import React from 'react';
+  import { createRoot } from 'react-dom/client';
+
+  // Mount the ApplicationGrid component
+  const container = document.getElementById('application-grid-container');
+  if (container) {
+    const root = createRoot(container);
+    root.render(React.createElement(ApplicationGrid));
+  }
+</script>
+
+<style>
+  @import '../styles/globals.css';
+</style>

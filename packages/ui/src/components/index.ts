@@ -109,5 +109,13 @@ export type {
   RecordingState
 } from './media';
 
+// Application Components
+export {
+  ApplicationGrid,
+  ApplicationCard,
+  ApplicationFilter,
+  ApplicationLauncher
+} from './applications';
+
 // Utilities
 export { cn } from '../lib/utils';
