@@ -3,12 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { UserManagement } from './UserManagement';
 import { GroupManagement } from './GroupManagement';
+import { ApplicationManagement } from './ApplicationManagement';
 
 interface AdminDashboardProps {
   className?: string;
 }
 
-type ActiveTab = 'overview' | 'users' | 'groups';
+type ActiveTab = 'overview' | 'users' | 'groups' | 'applications';
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ className }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
@@ -19,6 +20,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ className }) => 
         return <UserManagement />;
       case 'groups':
         return <GroupManagement />;
+      case 'applications':
+        return <ApplicationManagement />;
       case 'overview':
       default:
         return (
@@ -79,7 +82,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ className }) => 
             </div>
 
             {/* Quick Actions */}
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <Card>
                 <CardHeader>
                   <CardTitle>User Management</CardTitle>
@@ -142,6 +145,44 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ className }) => 
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Custom Groups</span>
+                      <span className="font-medium">3</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Application Management</CardTitle>
+                  <CardDescription>
+                    Manage REST, MCP, and inbuilt applications and their access permissions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Application Overview</p>
+                      <p className="text-xs text-muted-foreground">8 applications configured</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setActiveTab('applications')}
+                    >
+                      Manage Apps
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>REST APIs</span>
+                      <span className="font-medium">3</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>MCP Applications</span>
+                      <span className="font-medium">2</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Inbuilt Apps</span>
                       <span className="font-medium">3</span>
                     </div>
                   </div>
@@ -215,6 +256,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ className }) => 
           className="rounded-b-none"
         >
           🏷️ Groups
+        </Button>
+        <Button
+          variant={activeTab === 'applications' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('applications')}
+          className="rounded-b-none"
+        >
+          📱 Applications
         </Button>
       </div>
 
