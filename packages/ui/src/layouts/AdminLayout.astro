@@ -1,0 +1,86 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <!-- Header -->
+  <header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div class="container flex h-14 items-center">
+      <div class="mr-4 flex">
+        <div class="flex items-center space-x-2">
+          <h1 class="text-lg font-semibold">AIrium</h1>
+        </div>
+      </div>
+      
+      <div class="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+        <div class="w-full flex-1 md:w-auto md:flex-none">
+          <!-- Search or other content can go here -->
+        </div>
+        
+        <nav class="flex items-center space-x-2">
+          <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10">
+            <span class="sr-only">User menu</span>
+            👤
+          </button>
+          <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10">
+            <span class="sr-only">Logout</span>
+            🚪
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex flex-1">
+    <!-- Sidebar -->
+    <div class="relative flex flex-col border-r bg-background transition-all duration-300 w-64">
+      <!-- Navigation -->
+      <nav class="flex-1 space-y-1 p-2">
+        <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 w-full justify-start">
+          <span class="mr-2">📊</span>
+          <span class="truncate">Dashboard</span>
+        </button>
+        <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground w-full justify-start">
+          <span class="mr-2">👥</span>
+          <span class="truncate">User Management</span>
+        </button>
+        <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground w-full justify-start">
+          <span class="mr-2">⚙️</span>
+          <span class="truncate">Applications</span>
+        </button>
+        <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground w-full justify-start">
+          <span class="mr-2">💬</span>
+          <span class="truncate">Chat Interface</span>
+        </button>
+        <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground w-full justify-start">
+          <span class="mr-2">📁</span>
+          <span class="truncate">Media Upload</span>
+        </button>
+      </nav>
+
+      <!-- Footer -->
+      <div class="border-t p-2">
+        <div class="flex items-center space-x-2 px-2 py-1">
+          <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+            👤
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate">Admin User</p>
+            <p class="text-xs text-muted-foreground truncate">admin@airium.com</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+      <slot />
+    </main>
+  </div>
+</BaseLayout>

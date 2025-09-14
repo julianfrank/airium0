@@ -13,7 +13,7 @@ Based on the aws-samples/sample-serverless-nova-sonic-chat pattern:
 ```mermaid
 graph TB
     subgraph "Frontend Layer"
-        UI[UI Module - Astro SSG + React 19]
+        UI[UI Module - Astro 5.13.7 SSG + React 19]
         AmpUI[Amplify React UI + ShadCN]
         WS[WebSocket Client]
     end
@@ -107,7 +107,7 @@ airium/
 │   │   │       ├── connection-manager/
 │   │   │       └── appsync-event-publisher/
 │   │   └── amplify_outputs.json
-│   └── ui/                      # UI Module (Astro + React)
+│   └── ui/                      # UI Module (Astro 5.13.7 + React 19)
 │       ├── src/
 │       │   ├── components/
 │       │   │   ├── voice/

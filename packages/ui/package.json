@@ -13,26 +13,31 @@
     "clean": "rm -rf dist .astro"
   },
   "dependencies": {
-    "astro": "^4.0.0",
-    "@astrojs/react": "^3.0.0",
-    "@astrojs/tailwind": "^5.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "tailwindcss": "^3.0.0",
-    "@aws-amplify/ui-react": "^6.0.0",
-    "aws-amplify": "^6.0.0",
-    "@radix-ui/react-slot": "^1.0.0",
+    "@airium/shared": "*",
+    "@astrojs/react": "^4.3.0",
+    "@astrojs/tailwind": "^6.1.0",
+    "@aws-amplify/ui-react": "^6.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "astro": "^5.13.7",
+    "aws-amplify": "^6.5.0",
     "class-variance-authority": "^0.7.0",
-    "clsx": "^2.0.0",
-    "tailwind-merge": "^2.0.0",
-    "@airium/shared": "*"
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.400.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.5.0",
+    "tailwindcss": "^3.4.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@astrojs/check": "^0.3.0",
-    "vitest": "^1.0.0",
-    "typescript": "^5.0.0",
-    "eslint-plugin-astro": "^0.29.0"
+    "@astrojs/check": "^0.10.0",
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^16.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "eslint-plugin-astro": "^1.2.0",
+    "jsdom": "^25.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0"
   }
 }

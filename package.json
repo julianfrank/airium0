@@ -15,8 +15,10 @@
     "clean": "npm run clean --workspaces && rm -rf node_modules",
     "core:build": "npm run build -w packages/core",
     "core:dev": "npm run dev -w packages/core",
+    "core:test": "npm run test -w packages/core",
     "ui:build": "npm run build -w packages/ui",
     "ui:dev": "npm run dev -w packages/ui",
+    "ui:test": "npm run test -w packages/ui",
     "shared:build": "npm run build -w shared"
   },
   "devDependencies": {

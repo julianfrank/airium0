@@ -3,7 +3,14 @@ import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
-  integrations: [react(), tailwind()],
+  integrations: [
+    react({
+      experimentalReactChildren: true
+    }),
+    tailwind({
+      applyBaseStyles: false
+    })
+  ],
   output: 'static',
   build: {
     format: 'directory'
@@ -15,6 +22,10 @@ export default defineConfig({
         '@airium/shared': new URL('../../shared/src', import.meta.url).pathname,
         '@airium/core': new URL('../core/src', import.meta.url).pathname
       }
+    },
+    optimizeDeps: {
+      include: ['react', 'react-dom']
     }
-  }
+  },
+  site: 'https://devposthackathon.tojf.link'
 });

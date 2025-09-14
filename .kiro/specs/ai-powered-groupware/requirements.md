@@ -23,7 +23,7 @@ AIrium is an AI-powered groupware solution built on a completely serverless AWS 
 
 #### Acceptance Criteria
 
-1. WHEN the frontend is built THEN it SHALL use Astro in SSG mode with React 19
+1. WHEN the frontend is built THEN it SHALL use Astro 5.13.7 in SSG mode with React 19
 2. WHEN the application is hosted THEN it SHALL be deployed on Amplify Gen 2 using SSG model
 3. WHEN UI components are needed THEN the system SHALL use Amplify React UI as primary framework and ShadCN for unsupported components
 4. WHEN the application is accessed THEN it SHALL be responsive across desktop, tablet, and mobile devices

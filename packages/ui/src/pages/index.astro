@@ -1,0 +1,59 @@
+---
+import GeneralLayout from '../layouts/GeneralLayout.astro';
+import { Button } from '../components/ui/button';
+---
+
+<GeneralLayout title="AIrium - Home">
+  <div class="mx-auto w-full max-w-2xl px-4 sm:px-6 lg:px-8">
+    <div class="space-y-6">
+      <div class="text-center space-y-4">
+        <h1 class="text-4xl font-bold tracking-tight">Welcome to AIrium</h1>
+        <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+          AI-powered groupware solution built on serverless AWS architecture
+        </p>
+      </div>
+
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+          <div class="flex flex-col space-y-1.5 p-6">
+            <h3 class="text-2xl font-semibold leading-none tracking-tight">Voice Chat</h3>
+            <p class="text-sm text-muted-foreground">
+              Interact with AI using voice commands powered by Nova Sonic
+            </p>
+          </div>
+          <div class="p-6 pt-0">
+            <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">Start Voice Chat</button>
+          </div>
+        </div>
+
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+          <div class="flex flex-col space-y-1.5 p-6">
+            <h3 class="text-2xl font-semibold leading-none tracking-tight">Text Chat</h3>
+            <p class="text-sm text-muted-foreground">
+              Chat with AI using text input and get intelligent responses
+            </p>
+          </div>
+          <div class="p-6 pt-0">
+            <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">Open Chat</button>
+          </div>
+        </div>
+
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+          <div class="flex flex-col space-y-1.5 p-6">
+            <h3 class="text-2xl font-semibold leading-none tracking-tight">Media Upload</h3>
+            <p class="text-sm text-muted-foreground">
+              Upload documents, images, and videos for AI processing
+            </p>
+          </div>
+          <div class="p-6 pt-0">
+            <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">Upload Media</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</GeneralLayout>
+
+<style>
+  @import '../styles/globals.css';
+</style>
