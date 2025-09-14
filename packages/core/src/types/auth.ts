@@ -61,7 +61,7 @@ export interface ListGroupsResponse {
 export interface CognitoConfig {
   userPoolId: string;
   userPoolClientId: string;
-  identityPoolId: string;
+  identityPoolId?: string;
   region: string;
 }
 

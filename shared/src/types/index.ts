@@ -5,3 +5,4 @@ export * from './media.js';
 export * from './websocket-events.js';
 export * from './nova-sonic-types.js';
 export * from './appsync-events.js';
+export * from './services.js';

@@ -273,7 +273,13 @@
   - Build media content display management
   - _Requirements: 9.1, 9.2, 9.3_
 
-- [ ] 21. Deploy and test Core Module backend infrastructure
+- [x] 21. Deploy and test Core Module backend infrastructure
+
+
+
+
+
+
   - Deploy Amplify Gen 2 backend with all CDK stacks
   - Generate and verify amplify_outputs.json configuration
   - Test authentication system with Cognito User Pool and Identity Pool

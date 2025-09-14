@@ -33,6 +33,9 @@ export interface VoiceResponse {
   sessionId: string;
   data?: any;
   timestamp: string;
+  text?: string;
+  audio?: string;
+  status?: 'processing' | 'completed' | 'error';
 }
 
 export interface NovaSonicCapabilities {

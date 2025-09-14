@@ -4,10 +4,14 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface AuthStackProps extends StackProps {
   userPoolId: string;
-  identityPoolId: string;
+  identityPoolId?: string;
 }
 
 export class AuthStack extends Construct {
@@ -25,7 +29,7 @@ export class AuthStack extends Construct {
       timeout: Duration.seconds(30),
       environment: {
         USER_POOL_ID: props.userPoolId,
-        IDENTITY_POOL_ID: props.identityPoolId,
+        IDENTITY_POOL_ID: props.identityPoolId || '',
         AWS_REGION: Stack.of(this).region,
       },
     });

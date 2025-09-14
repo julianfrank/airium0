@@ -9,7 +9,7 @@ import { WebSocketLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integra
 
 export interface WebSocketStackProps extends StackProps {
   userPoolId: string;
-  identityPoolId: string;
+  identityPoolId?: string;
 }
 
 export class WebSocketStack extends Stack {
@@ -44,7 +44,7 @@ export class WebSocketStack extends Stack {
       environment: {
         CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
         USER_POOL_ID: props.userPoolId,
-        IDENTITY_POOL_ID: props.identityPoolId,
+        IDENTITY_POOL_ID: props.identityPoolId || '',
       },
     });
 
