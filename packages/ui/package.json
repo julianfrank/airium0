@@ -21,6 +21,7 @@
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-tabs": "^1.0.4",
     "astro": "^5.13.7",
     "aws-amplify": "^6.5.0",
     "graphql": "^16.8.0",

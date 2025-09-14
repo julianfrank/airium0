@@ -1,83 +1,54 @@
-import { expect, afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
-import * as matchers from '@testing-library/jest-dom/matchers';
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
-// Extend Vitest's expect with jest-dom matchers
-expect.extend(matchers);
+// Mock URL.createObjectURL
+global.URL.createObjectURL = vi.fn(() => 'mock-url');
+global.URL.revokeObjectURL = vi.fn();
 
-// Cleanup after each test case
-afterEach(() => {
-  cleanup();
-});
-
-// Mock Web APIs that might be used in components
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
-
-// Mock Web Audio APIs for voice components
-Object.defineProperty(window, 'navigator', {
-  value: {
-    mediaDevices: {
-      getUserMedia: vi.fn(() => Promise.resolve({
-        getTracks: () => [{ stop: vi.fn() }]
-      }))
+// Mock MediaRecorder
+class MockMediaRecorder {
+  static isTypeSupported = vi.fn(() => true);
+  
+  ondataavailable: ((event: any) => void) | null = null;
+  onstop: (() => void) | null = null;
+  state: string = 'inactive';
+  
+  constructor(stream: MediaStream, options?: any) {}
+  
+  start = vi.fn(() => {
+    this.state = 'recording';
+  });
+  
+  stop = vi.fn(() => {
+    this.state = 'inactive';
+    if (this.onstop) {
+      this.onstop();
     }
-  },
-  writable: true
+  });
+}
+
+global.MediaRecorder = MockMediaRecorder as any;
+
+// Mock getUserMedia
+const mockGetUserMedia = vi.fn();
+global.navigator.mediaDevices = {
+  getUserMedia: mockGetUserMedia
+} as any;
+
+// Setup default mock behavior
+mockGetUserMedia.mockResolvedValue({
+  getTracks: () => [{ stop: vi.fn() }]
 });
 
-Object.defineProperty(window, 'MediaRecorder', {
-  value: vi.fn(() => ({
-    start: vi.fn(),
-    stop: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    ondataavailable: null,
-    onerror: null,
-    onstop: null,
-    state: 'inactive'
-  })),
-  writable: true
-});
-
-Object.defineProperty(MediaRecorder, 'isTypeSupported', {
-  value: vi.fn(() => true),
-  writable: true
-});
-
-Object.defineProperty(window, 'FileReader', {
-  value: vi.fn(() => ({
-    readAsDataURL: vi.fn(),
-    onloadend: null,
-    result: 'data:audio/webm;base64,SGVsbG8gV29ybGQ='
-  })),
-  writable: true
-});
-
-Object.defineProperty(window, 'Audio', {
-  value: vi.fn(() => ({
-    play: vi.fn(() => Promise.resolve()),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn()
-  })),
-  writable: true
-});
-
-Object.defineProperty(window, 'URL', {
-  value: {
-    createObjectURL: vi.fn(() => 'blob:mock-url'),
-    revokeObjectURL: vi.fn()
-  },
-  writable: true
-});
+// Mock File constructor
+global.File = class MockFile {
+  name: string;
+  size: number;
+  type: string;
+  
+  constructor(chunks: any[], filename: string, options: any = {}) {
+    this.name = filename;
+    this.size = options.size || 0;
+    this.type = options.type || '';
+  }
+} as any;

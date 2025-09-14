@@ -88,5 +88,26 @@ export type {
   Message
 } from './chat';
 
+// Media Components
+export {
+  MediaUploader,
+  MediaGallery,
+  MediaPreview,
+  VoiceRecorder,
+  VideoRecorder,
+  MediaManager
+} from './media';
+export type {
+  MediaUploaderProps,
+  MediaGalleryProps,
+  MediaPreviewProps,
+  VoiceRecorderProps,
+  VideoRecorderProps,
+  MediaManagerProps,
+  MediaItem,
+  MediaUploadState,
+  RecordingState
+} from './media';
+
 // Utilities
 export { cn } from '../lib/utils';
