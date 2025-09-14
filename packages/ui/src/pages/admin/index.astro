@@ -1,134 +1,88 @@
 ---
-import AdminLayout from '../../layouts/AdminLayout.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
 
-<AdminLayout title="AIrium - Admin Dashboard">
-  <div class="mx-auto w-full px-4 sm:px-6 lg:px-8">
-    <div class="space-y-6">
-      <div>
-        <h1 class="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-        <p class="text-muted-foreground">
-          Manage users, applications, and system settings
-        </p>
+<BaseLayout title="AIrium - Admin Dashboard">
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+      <p class="text-muted-foreground">
+        Manage users, applications, and system settings
+      </p>
+    </div>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <p class="text-blue-800 text-sm">
+        <strong>Note:</strong> This page would normally require admin authentication. 
+        In a production environment, access would be controlled by the AuthWrapper component.
+      </p>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+        <div class="flex flex-col space-y-1.5 p-6">
+          <h3 class="text-2xl font-semibold leading-none tracking-tight">User Management</h3>
+          <p class="text-sm text-muted-foreground">
+            Add, remove, and manage user accounts and groups
+          </p>
+        </div>
+        <div class="p-6 pt-0">
+          <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">Manage Users</button>
+        </div>
       </div>
 
-      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
-            <h3 class="text-sm font-medium">Total Users</h3>
-          </div>
-          <div class="p-6 pt-0">
-            <div class="text-2xl font-bold">24</div>
-            <p class="text-xs text-muted-foreground">
-              +2 from last month
-            </p>
-          </div>
+      <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+        <div class="flex flex-col space-y-1.5 p-6">
+          <h3 class="text-2xl font-semibold leading-none tracking-tight">Applications</h3>
+          <p class="text-sm text-muted-foreground">
+            Configure REST, MCP, and inbuilt applications
+          </p>
         </div>
-
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
-            <h3 class="text-sm font-medium">Active Groups</h3>
-          </div>
-          <div class="p-6 pt-0">
-            <div class="text-2xl font-bold">8</div>
-            <p class="text-xs text-muted-foreground">
-              +1 from last month
-            </p>
-          </div>
+        <div class="p-6 pt-0">
+          <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">Manage Apps</button>
         </div>
+      </div>
 
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
-            <h3 class="text-sm font-medium">Applications</h3>
-          </div>
-          <div class="p-6 pt-0">
+      <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+        <div class="flex flex-col space-y-1.5 p-6">
+          <h3 class="text-2xl font-semibold leading-none tracking-tight">System Settings</h3>
+          <p class="text-sm text-muted-foreground">
+            Configure system-wide settings and preferences
+          </p>
+        </div>
+        <div class="p-6 pt-0">
+          <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+      <div class="flex flex-col space-y-1.5 p-6">
+        <h3 class="text-xl font-semibold leading-none tracking-tight">Quick Stats</h3>
+      </div>
+      <div class="p-6 pt-0">
+        <div class="grid gap-4 md:grid-cols-4">
+          <div class="text-center">
             <div class="text-2xl font-bold">12</div>
-            <p class="text-xs text-muted-foreground">
-              +3 from last month
-            </p>
+            <div class="text-sm text-muted-foreground">Total Users</div>
           </div>
-        </div>
-
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
-            <h3 class="text-sm font-medium">Chat Sessions</h3>
+          <div class="text-center">
+            <div class="text-2xl font-bold">5</div>
+            <div class="text-sm text-muted-foreground">Active Groups</div>
           </div>
-          <div class="p-6 pt-0">
-            <div class="text-2xl font-bold">156</div>
-            <p class="text-xs text-muted-foreground">
-              +12% from last month
-            </p>
+          <div class="text-center">
+            <div class="text-2xl font-bold">8</div>
+            <div class="text-sm text-muted-foreground">Applications</div>
           </div>
-        </div>
-      </div>
-
-      <div class="grid gap-6 md:grid-cols-2">
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-col space-y-1.5 p-6">
-            <h3 class="text-2xl font-semibold leading-none tracking-tight">Recent Activity</h3>
-            <p class="text-sm text-muted-foreground">
-              Latest user activities and system events
-            </p>
-          </div>
-          <div class="p-6 pt-0">
-            <div class="space-y-4">
-              <div class="flex items-center space-x-4">
-                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div class="flex-1 space-y-1">
-                  <p class="text-sm font-medium">New user registered</p>
-                  <p class="text-xs text-muted-foreground">2 minutes ago</p>
-                </div>
-              </div>
-              <div class="flex items-center space-x-4">
-                <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div class="flex-1 space-y-1">
-                  <p class="text-sm font-medium">Application deployed</p>
-                  <p class="text-xs text-muted-foreground">5 minutes ago</p>
-                </div>
-              </div>
-              <div class="flex items-center space-x-4">
-                <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <div class="flex-1 space-y-1">
-                  <p class="text-sm font-medium">Group permissions updated</p>
-                  <p class="text-xs text-muted-foreground">10 minutes ago</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-col space-y-1.5 p-6">
-            <h3 class="text-2xl font-semibold leading-none tracking-tight">System Status</h3>
-            <p class="text-sm text-muted-foreground">
-              Current system health and performance metrics
-            </p>
-          </div>
-          <div class="p-6 pt-0">
-            <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-medium">API Response Time</span>
-                <span class="text-sm text-green-600">125ms</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-medium">Database Connections</span>
-                <span class="text-sm text-green-600">Active</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-medium">WebSocket Connections</span>
-                <span class="text-sm text-green-600">8 active</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-medium">AI Services</span>
-                <span class="text-sm text-green-600">Operational</span>
-              </div>
-            </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold">24</div>
+            <div class="text-sm text-muted-foreground">Active Sessions</div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</AdminLayout>
+</BaseLayout>
 
 <style>
   @import '../../styles/globals.css';
