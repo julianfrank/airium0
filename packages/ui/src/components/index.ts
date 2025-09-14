@@ -20,5 +20,13 @@ export { Header } from './layout/Header';
 export { AdminSidebar } from './layout/AdminSidebar';
 export { ResponsiveContainer } from './layout/ResponsiveContainer';
 
+// WebSocket Components
+export { 
+  WebSocketProvider, 
+  useWebSocketContext, 
+  WebSocketStatus 
+} from './websocket';
+export type { WebSocketProviderProps, WebSocketStatusProps } from './websocket';
+
 // Utilities
 export { cn } from '../lib/utils';
